@@ -310,7 +310,7 @@ export type BrandSignalRecord = z.infer<typeof BrandSignalRecordSchema>;
 // ---------------------------------------------------------------------------
 
 export const EvaluateRequestSchema = z.object({
-  profile: CreatorProfileInputSchema,
+  profile_id: z.string().min(1),
   offer: OfferInputSchema,
 });
 export type EvaluateRequest = z.infer<typeof EvaluateRequestSchema>;

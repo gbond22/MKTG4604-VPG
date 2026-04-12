@@ -1,43 +1,64 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import type { EvaluationResult } from "@/lib/validation/schemas";
 
-/**
- * RiskFlags — placeholder shell.
- *
- * Will display a list of RiskFlag objects, each with:
- *   - severity badge (critical / high / medium / low)
- *   - category label
- *   - description text
- *
- * TODO (step 10): accept risk_flags: RiskFlag[] prop and render live data.
- */
-export function RiskFlags() {
+const SEVERITY_VARIANT = {
+  critical: "destructive",
+  high: "destructive",
+  medium: "secondary",
+  low: "outline",
+} as const satisfies Record<string, "destructive" | "secondary" | "outline">;
+
+const SEVERITY_LABEL = {
+  critical: "Critical",
+  high: "High",
+  medium: "Medium",
+  low: "Low",
+};
+
+interface RiskFlagsProps {
+  result: EvaluationResult | null;
+}
+
+export function RiskFlags({ result }: RiskFlagsProps) {
+  const flags = result?.risk_flags ?? [];
+
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Risk Flags</CardTitle>
+        <CardTitle className="text-base">
+          Risk Flags
+          {flags.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              ({flags.length})
+            </span>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Placeholder empty state */}
-        <div className="flex min-h-[80px] items-center justify-center rounded-md border border-dashed border-border">
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">No evaluation yet.</p>
-            <div className="mt-2 flex justify-center gap-1.5">
-              <Badge variant="destructive" className="text-xs opacity-30">
-                Critical
-              </Badge>
-              <Badge variant="outline" className="text-xs opacity-30">
-                High
-              </Badge>
-              <Badge variant="secondary" className="text-xs opacity-30">
-                Medium
-              </Badge>
-            </div>
+        {flags.length === 0 ? (
+          <div className="flex min-h-[80px] items-center justify-center rounded-md border border-dashed border-border">
+            <p className="text-sm text-muted-foreground">
+              {result ? "No risk flags." : "No evaluation yet."}
+            </p>
           </div>
-        </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Risk flags — live data wired in step 10.
-        </p>
+        ) : (
+          <ul className="space-y-3">
+            {flags.map((flag, i) => (
+              <li key={i} className="flex gap-3">
+                <Badge
+                  variant={SEVERITY_VARIANT[flag.severity]}
+                  className="shrink-0 self-start text-xs"
+                >
+                  {SEVERITY_LABEL[flag.severity]}
+                </Badge>
+                <span className="text-sm text-foreground">
+                  {flag.description}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </CardContent>
     </Card>
   );
