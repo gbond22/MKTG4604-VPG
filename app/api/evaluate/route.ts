@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { EvaluateRequestSchema } from "@/lib/validation/schemas";
 import { getProfileById } from "@/lib/db/profile";
 import { prisma } from "@/lib/prisma";
-import { parseOffer } from "@/lib/ollama/mock-parser";
+import { parseOffer } from "@/lib/ollama/parser";
 import { runScoringEngine } from "@/lib/scoring/engine";
 
 /**
@@ -12,7 +12,7 @@ import { runScoringEngine } from "@/lib/scoring/engine";
  *   1. Validate request body
  *   2. Load creator profile
  *   3. Persist raw offer
- *   4. Parse offer text → ParsedOffer (mock parser for now)
+ *   4. Parse offer text → ParsedOffer (Ollama LLM; mock fallback if unreachable)
  *   5. Run deterministic scoring engine → EvaluationResult
  *   6. Persist evaluation
  *   7. Return { evaluation_id, result }
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   }
 
   // ── 3. Parse offer → ParsedOffer ──────────────────────────────────────────
-  const parsedOffer = parseOffer(offer.raw_offer_text, offer.brand_handle);
+  const parsedOffer = await parseOffer(offer.raw_offer_text, offer.brand_handle);
 
   // ── 4. Run deterministic scoring engine ───────────────────────────────────
   const result = runScoringEngine({

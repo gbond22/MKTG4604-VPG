@@ -18,7 +18,7 @@ import type { ParsedOffer } from "@/lib/validation/schemas";
  * @param _brandName  Optional brand name hint (unused by the mock).
  * @returns A hardcoded ParsedOffer representing a typical mid-range offer.
  */
-export function parseOffer(
+export function parseMockOffer(
   _rawText: string,
   _brandName?: string | null
 ): ParsedOffer {
