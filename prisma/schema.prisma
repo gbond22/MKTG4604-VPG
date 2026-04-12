@@ -1,7 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// This is your Prisma schema file.
+// Learn more: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +8,146 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+}
+
+// ---------------------------------------------------------------------------
+// User
+// Minimal user model — auth skipped for MVP
+// ---------------------------------------------------------------------------
+model User {
+  id         String          @id @default(cuid())
+  name       String?
+  email      String?         @unique
+  created_at DateTime        @default(now())
+
+  profiles   CreatorProfile[]
+  offers     BrandOffer[]
+}
+
+// ---------------------------------------------------------------------------
+// CreatorProfile
+// Nested/complex fields stored as JSON strings (SQLite has no JSON type;
+// Prisma represents them as String with @db.Text is not needed for SQLite).
+// audience_demographics: { age_range, gender_split, top_locations }
+// normalized_metrics:    { engagement_tier, view_rate, estimated_cpm }
+// ---------------------------------------------------------------------------
+model CreatorProfile {
+  id                      String       @id @default(cuid())
+  user_id                 String?
+  platform                String       // "instagram" | "tiktok"
+  niche                   String       // "beauty" | "fitness" | "lifestyle" | "food" | "consumer"
+  followers               Int
+  engagement_rate         Float
+  avg_views               Int
+  geography               String       // ISO 3166-1 alpha-2
+  competitor_restrictions String?      // JSON: string[]
+  handle                  String?
+  profile_url             String?
+  audience_demographics   String?      // JSON: AudienceDemographics
+  normalized_metrics      String?      // JSON: NormalizedMetrics
+  created_at              DateTime     @default(now())
+  updated_at              DateTime     @updatedAt
+
+  user        User?        @relation(fields: [user_id], references: [id])
+  evaluations Evaluation[]
+}
+
+// ---------------------------------------------------------------------------
+// BrandOffer
+// parsed_data:   JSON of ParsedOffer (output from LLM parser)
+// deliverables:  JSON of Deliverable[] (denormalized for quick access)
+// ---------------------------------------------------------------------------
+model BrandOffer {
+  id            String       @id @default(cuid())
+  user_id       String?
+  raw_offer_text String
+  brand_name    String?
+  brand_url     String?
+  brand_handle  String?
+  parsed_data   String?      // JSON: ParsedOffer
+  deliverables  String?      // JSON: Deliverable[]
+  usage_rights  String?      // JSON: UsageRights
+  created_at    DateTime     @default(now())
+
+  user        User?        @relation(fields: [user_id], references: [id])
+  evaluations Evaluation[]
+}
+
+// ---------------------------------------------------------------------------
+// Evaluation
+// subscore_breakdown:  JSON of SubscoreBreakdown
+// risk_flags:          JSON of RiskFlag[]
+// negotiation_points:  JSON of NegotiationPoint[]
+// evidence_notes:      JSON of EvidenceNote[]
+// fair_market_range:   JSON of FairMarketRange
+// ---------------------------------------------------------------------------
+model Evaluation {
+  id                   String    @id @default(cuid())
+  offer_id             String
+  profile_id           String
+  decision_status      String    // "ACCEPT" | "NEGOTIATE" | "DECLINE" | "NEED_MORE_INFO"
+  composite_score      Float?    // null when NEED_MORE_INFO
+  confidence_level     String    // "high" | "medium" | "low"
+  subscore_breakdown   String?   // JSON: SubscoreBreakdown
+  risk_flags           String    // JSON: RiskFlag[]
+  negotiation_points   String    // JSON: NegotiationPoint[]
+  evidence_notes       String    // JSON: EvidenceNote[]
+  fair_market_range    String?   // JSON: FairMarketRange
+  fit_summary          String?
+  missing_info_warnings String   // JSON: string[]
+  created_at           DateTime  @default(now())
+
+  offer     BrandOffer     @relation(fields: [offer_id], references: [id])
+  profile   CreatorProfile @relation(fields: [profile_id], references: [id])
+  follow_ups FollowUp[]
+}
+
+// ---------------------------------------------------------------------------
+// FollowUp
+// Stores each Q&A turn for follow-up chat on a given evaluation
+// ---------------------------------------------------------------------------
+model FollowUp {
+  id              String    @id @default(cuid())
+  evaluation_id   String
+  user_question   String
+  system_response String
+  created_at      DateTime  @default(now())
+
+  evaluation Evaluation @relation(fields: [evaluation_id], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// BenchmarkReference
+// Loaded from fixtures; kept in DB for querying and Studio inspection
+// ---------------------------------------------------------------------------
+model BenchmarkReference {
+  id                String  @id @default(cuid())
+  platform          String  // "instagram" | "tiktok"
+  niche             String
+  tier              String  // "nano" | "micro" | "mid" | "macro"
+  follower_range_min Int
+  follower_range_max Int
+  deliverable_type  String
+  avg_rate          Float
+  min_rate          Float
+  max_rate          Float
+  source            String
+  year              Int?
+}
+
+// ---------------------------------------------------------------------------
+// BrandSignal
+// Loaded from fixtures; updated as needed
+// legitimacy_flags: JSON of Record<string, boolean>
+// ---------------------------------------------------------------------------
+model BrandSignal {
+  id               String  @id @default(cuid())
+  brand_name       String
+  brand_url        String?
+  brand_handle     String?
+  review_score     Float?  // 1–5
+  complaint_notes  String?
+  social_presence  String  // "strong" | "moderate" | "weak" | "none" | "unknown"
+  legitimacy_flags String  // JSON: Record<string, boolean>
+  last_updated     String?
 }
