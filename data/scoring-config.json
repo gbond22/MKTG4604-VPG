@@ -1,0 +1,35 @@
+{
+  "weights": {
+    "fair_pay": 0.35,
+    "brand_risk": 0.3,
+    "fit": 0.2,
+    "terms_burden": 0.15
+  },
+  "hard_stop_rules": [
+    {
+      "id": "SCAM_OVERRIDE",
+      "condition": "brand review_score below 2.0 OR known_complaints includes non-payment",
+      "action": "FORCE_DECLINE"
+    },
+    {
+      "id": "MISSING_CRITICAL",
+      "condition": "compensation OR deliverables OR usage_rights is null",
+      "action": "NEED_MORE_INFO"
+    },
+    {
+      "id": "UNSUPPORTED_SEGMENT",
+      "condition": "platform not in supported list OR niche not in supported list",
+      "action": "LOW_CONFIDENCE_WARNING"
+    },
+    {
+      "id": "EXCESSIVE_RIGHTS",
+      "condition": "paid ads or whitelisting requested for 12+ months with no additional compensation",
+      "action": "FORCE_DECLINE"
+    }
+  ],
+  "decision_thresholds": {
+    "accept_min": 75,
+    "negotiate_min": 50,
+    "decline_below": 50
+  }
+}

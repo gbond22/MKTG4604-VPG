@@ -20,6 +20,36 @@ function loadJson<T>(relativePath: string): T {
   return JSON.parse(readFileSync(fullPath, "utf-8")) as T;
 }
 
+function resolveTier(
+  minFollowers: number,
+  maxFollowers: number
+): "nano" | "micro" | "mid" | "macro" {
+  if (minFollowers === 10000 && maxFollowers === 25000) return "nano";
+  if (minFollowers === 25000 && maxFollowers === 50000) return "micro";
+  if (minFollowers === 50000 && maxFollowers === 100000) return "mid";
+  return "macro";
+}
+
+function normalizeNiche(niche: BenchmarkRecord["niche"]): string {
+  return niche === "consumer_products" ? "consumer" : niche;
+}
+
+function normalizeSocialPresence(record: BrandSignalRecord): string {
+  if (!record.social_presence || !record.legitimacy_flags.has_social) {
+    return "none";
+  }
+
+  if (record.review_score !== null && record.review_score >= 4 && record.legitimacy_flags.is_verified) {
+    return "strong";
+  }
+
+  if (record.review_score !== null && record.review_score >= 2.5) {
+    return "moderate";
+  }
+
+  return "weak";
+}
+
 async function seedBenchmarks() {
   const records = loadJson<BenchmarkRecord[]>("data/benchmarks.json");
 
@@ -28,18 +58,16 @@ async function seedBenchmarks() {
   for (const r of records) {
     await prisma.benchmarkReference.create({
       data: {
-        id: r.id,
-        platform: r.platform,
-        niche: r.niche,
-        tier: r.tier,
-        follower_range_min: r.followers_min,
-        follower_range_max: r.followers_max,
-        deliverable_type: r.deliverable_type,
-        avg_rate: (r.range_low + r.range_high) / 2,
-        min_rate: r.range_low,
-        max_rate: r.range_high,
+        platform: r.platform.toLowerCase(),
+        niche: normalizeNiche(r.niche),
+        tier: resolveTier(r.follower_range_min, r.follower_range_max),
+        follower_range_min: r.follower_range_min,
+        follower_range_max: r.follower_range_max,
+        deliverable_type: r.deliverable.toLowerCase(),
+        avg_rate: r.avg_rate,
+        min_rate: r.min_rate,
+        max_rate: r.max_rate,
         source: r.source,
-        year: r.year ?? null,
       },
     });
   }
@@ -55,15 +83,12 @@ async function seedBrandSignals() {
   for (const r of records) {
     await prisma.brandSignal.create({
       data: {
-        id: r.id,
         brand_name: r.brand_name,
-        brand_url: r.brand_url ?? null,
-        brand_handle: r.brand_handle ?? null,
+        brand_url: r.brand_url,
         review_score: r.review_score ?? null,
         complaint_notes: r.complaint_notes ?? null,
-        social_presence: r.social_presence,
+        social_presence: normalizeSocialPresence(r),
         legitimacy_flags: JSON.stringify(r.legitimacy_flags),
-        last_updated: r.last_updated ?? null,
       },
     });
   }

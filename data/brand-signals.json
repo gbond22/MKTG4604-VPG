@@ -1,0 +1,212 @@
+[
+  {
+    "brand_name": "LumaSkin Collective",
+    "brand_url": "https://lumaskincollective.com",
+    "review_score": 4.7,
+    "complaint_notes": null,
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": true,
+      "has_social": true,
+      "has_reviews": true,
+      "known_complaints": false,
+      "is_verified": true
+    }
+  },
+  {
+    "brand_name": "EverPeak Hydration",
+    "brand_url": "https://everpeakhydration.com",
+    "review_score": 4.4,
+    "complaint_notes": null,
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": true,
+      "has_social": true,
+      "has_reviews": true,
+      "known_complaints": false,
+      "is_verified": true
+    }
+  },
+  {
+    "brand_name": "Hearth & Habit Home",
+    "brand_url": "https://hearthandhabit.com",
+    "review_score": 4.1,
+    "complaint_notes": null,
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": true,
+      "has_social": true,
+      "has_reviews": true,
+      "known_complaints": false,
+      "is_verified": true
+    }
+  },
+  {
+    "brand_name": "Solstice Organics",
+    "brand_url": "https://solsticeorganics.com",
+    "review_score": 4.6,
+    "complaint_notes": null,
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": true,
+      "has_social": true,
+      "has_reviews": true,
+      "known_complaints": false,
+      "is_verified": true
+    }
+  },
+  {
+    "brand_name": "PulseForm Athletics",
+    "brand_url": "https://pulseformathletics.com",
+    "review_score": 4.3,
+    "complaint_notes": null,
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": true,
+      "has_social": true,
+      "has_reviews": true,
+      "known_complaints": false,
+      "is_verified": true
+    }
+  },
+  {
+    "brand_name": "Birch Table Foods",
+    "brand_url": "https://birchtablefoods.com",
+    "review_score": 3.9,
+    "complaint_notes": null,
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": true,
+      "has_social": true,
+      "has_reviews": true,
+      "known_complaints": false,
+      "is_verified": true
+    }
+  },
+  {
+    "brand_name": "Coastline Carry Goods",
+    "brand_url": "https://coastlinecarry.com",
+    "review_score": 4,
+    "complaint_notes": null,
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": true,
+      "has_social": true,
+      "has_reviews": true,
+      "known_complaints": false,
+      "is_verified": true
+    }
+  },
+  {
+    "brand_name": "VelaGlow Labs",
+    "brand_url": "https://velaglowlabs.com",
+    "review_score": 4.5,
+    "complaint_notes": null,
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": true,
+      "has_social": true,
+      "has_reviews": true,
+      "known_complaints": false,
+      "is_verified": true
+    }
+  },
+  {
+    "brand_name": "ModMuse Studio",
+    "brand_url": "https://modmusestudio.com",
+    "review_score": 3.2,
+    "complaint_notes": "Creators report slow approvals and 45-60 day payment timing, but not outright non-payment.",
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": true,
+      "has_social": true,
+      "has_reviews": true,
+      "known_complaints": true,
+      "is_verified": false
+    }
+  },
+  {
+    "brand_name": "CoreFuel Naturals",
+    "brand_url": "https://corefuelnaturals.com",
+    "review_score": 2.9,
+    "complaint_notes": "Mixed customer reviews cite subscription cancellation friction and delayed replies to creator emails.",
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": true,
+      "has_social": true,
+      "has_reviews": true,
+      "known_complaints": true,
+      "is_verified": false
+    }
+  },
+  {
+    "brand_name": "NoonTrail Living",
+    "brand_url": "https://noontrailliving.com",
+    "review_score": 3.4,
+    "complaint_notes": "Minor complaints mention confusing affiliate tracking and inconsistent campaign briefs.",
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": true,
+      "has_social": true,
+      "has_reviews": true,
+      "known_complaints": true,
+      "is_verified": false
+    }
+  },
+  {
+    "brand_name": "SnapSip Wellness",
+    "brand_url": "https://snapsipwellness.com",
+    "review_score": 2.7,
+    "complaint_notes": "A few creators mention rate renegotiation after content delivery and slow invoice approval.",
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": true,
+      "has_social": true,
+      "has_reviews": true,
+      "known_complaints": true,
+      "is_verified": false
+    }
+  },
+  {
+    "brand_name": "GlowTheory Agency",
+    "brand_url": "https://glowtheory-campaigns.co",
+    "review_score": 1.8,
+    "complaint_notes": "Multiple creator forum posts allege non-payment after deliverables were submitted.",
+    "social_presence": false,
+    "legitimacy_flags": {
+      "has_website": false,
+      "has_social": false,
+      "has_reviews": false,
+      "known_complaints": true,
+      "is_verified": false
+    }
+  },
+  {
+    "brand_name": "FitBurst Collabs",
+    "brand_url": "https://fitburst-collabs.shop",
+    "review_score": 2.2,
+    "complaint_notes": "Reports mention inflated follower screenshots, vague contracts, and pressure to post before payment terms are signed.",
+    "social_presence": true,
+    "legitimacy_flags": {
+      "has_website": false,
+      "has_social": true,
+      "has_reviews": false,
+      "known_complaints": true,
+      "is_verified": false
+    }
+  },
+  {
+    "brand_name": "MaisonHalo Deals",
+    "brand_url": "https://maisonhalo-deals.store",
+    "review_score": 1.6,
+    "complaint_notes": "Repeated complaints cite fake verification claims, unpaid usage requests, and suspicious asks for account access.",
+    "social_presence": false,
+    "legitimacy_flags": {
+      "has_website": false,
+      "has_social": false,
+      "has_reviews": false,
+      "known_complaints": true,
+      "is_verified": false
+    }
+  }
+]

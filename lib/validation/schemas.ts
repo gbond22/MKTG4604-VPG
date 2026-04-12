@@ -226,25 +226,26 @@ export const ScoringWeightsSchema = z.object({
   terms_burden: z.number().min(0).max(1),
 });
 
+export const HardStopActionSchema = z.enum([
+  "FORCE_DECLINE",
+  "NEED_MORE_INFO",
+  "LOW_CONFIDENCE_WARNING",
+]);
+
 export const HardStopRuleSchema = z.object({
   id: z.string(),
-  description: z.string(),
-  /** The forced decision when this rule fires */
-  forces_decision: DecisionStatusSchema,
-  severity: z.enum(["critical", "high"]),
+  condition: z.string(),
+  action: HardStopActionSchema,
 });
 
 export const ScoringConfigSchema = z.object({
-  version: z.string(),
   weights: ScoringWeightsSchema,
   hard_stop_rules: z.array(HardStopRuleSchema),
-  /** Min/max follower range considered supported */
-  supported_follower_range: z.object({
-    min: z.number().int(),
-    max: z.number().int(),
+  decision_thresholds: z.object({
+    accept_min: z.number().min(0).max(100),
+    negotiate_min: z.number().min(0).max(100),
+    decline_below: z.number().min(0).max(100),
   }),
-  supported_platforms: z.array(PlatformSchema),
-  supported_niches: z.array(NicheSchema),
 });
 export type ScoringConfig = z.infer<typeof ScoringConfigSchema>;
 export type ScoringWeights = z.infer<typeof ScoringWeightsSchema>;
@@ -254,22 +255,32 @@ export type HardStopRule = z.infer<typeof HardStopRuleSchema>;
 // Benchmark data
 // ---------------------------------------------------------------------------
 
+export const BenchmarkFixturePlatformSchema = z.enum(["Instagram", "TikTok"]);
+export const BenchmarkFixtureNicheSchema = z.enum([
+  "beauty",
+  "fitness",
+  "lifestyle",
+  "food",
+  "consumer_products",
+]);
+export const BenchmarkDeliverableSchema = z.enum([
+  "Reel",
+  "Story",
+  "Post",
+  "Video",
+  "Bundle",
+]);
+
 export const BenchmarkRecordSchema = z.object({
-  id: z.string(),
-  platform: PlatformSchema,
-  niche: NicheSchema,
-  /** Follower tier label, e.g. "nano", "micro", "mid", "macro" */
-  tier: z.enum(["nano", "micro", "mid", "macro"]),
-  /** Min followers for this tier */
-  followers_min: z.number().int(),
-  /** Max followers for this tier */
-  followers_max: z.number().int(),
-  deliverable_type: z.string(),
-  range_low: z.number().min(0),
-  range_high: z.number().min(0),
-  /** Data source citation */
+  platform: BenchmarkFixturePlatformSchema,
+  niche: BenchmarkFixtureNicheSchema,
+  follower_range_min: z.number().int(),
+  follower_range_max: z.number().int(),
+  deliverable: BenchmarkDeliverableSchema,
+  min_rate: z.number().min(0),
+  max_rate: z.number().min(0),
+  avg_rate: z.number().min(0),
   source: z.string(),
-  year: z.number().int().optional(),
 });
 export type BenchmarkRecord = z.infer<typeof BenchmarkRecordSchema>;
 
@@ -278,17 +289,19 @@ export type BenchmarkRecord = z.infer<typeof BenchmarkRecordSchema>;
 // ---------------------------------------------------------------------------
 
 export const BrandSignalRecordSchema = z.object({
-  id: z.string(),
   brand_name: z.string(),
-  brand_url: z.string().optional(),
-  brand_handle: z.string().optional(),
+  brand_url: z.string().url(),
   /** 1–5 overall review score from public sources */
   review_score: z.number().min(1).max(5).nullable(),
   complaint_notes: z.string().nullable(),
-  social_presence: z.enum(["strong", "moderate", "weak", "none", "unknown"]),
-  /** Structured flags: { is_verified, pays_on_time, known_scam, etc. } */
-  legitimacy_flags: z.record(z.string(), z.boolean()),
-  last_updated: z.string().optional(),
+  social_presence: z.boolean(),
+  legitimacy_flags: z.object({
+    has_website: z.boolean(),
+    has_social: z.boolean(),
+    has_reviews: z.boolean(),
+    known_complaints: z.boolean(),
+    is_verified: z.boolean(),
+  }),
 });
 export type BrandSignalRecord = z.infer<typeof BrandSignalRecordSchema>;
 
