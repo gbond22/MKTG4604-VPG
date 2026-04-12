@@ -10,6 +10,7 @@ import type {
   FairMarketRange,
   SubscoreBreakdown,
 } from "@/lib/validation/schemas";
+import { logFollowUp } from "@/lib/trace/logger";
 
 /**
  * POST /api/follow-up
@@ -104,6 +105,12 @@ export async function POST(req: NextRequest) {
     // Non-fatal — log and continue; the client still gets the response
     console.error("[/api/follow-up POST] follow-up save failed", err);
   }
+
+  await logFollowUp({
+    evaluation_id,
+    user_question,
+    system_response: systemResponse,
+  });
 
   return NextResponse.json({ system_response: systemResponse }, { status: 200 });
 }

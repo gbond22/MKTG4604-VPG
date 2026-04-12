@@ -19,6 +19,17 @@ import type { ParsedOffer } from "@/lib/validation/schemas";
 import { chat } from "./client";
 import { parseMockOffer } from "./mock-parser";
 
+export interface OfferParseTrace {
+  parser_used: "ollama" | "mock";
+  status: "success" | "fallback";
+  error: string | null;
+}
+
+export interface OfferParseResult {
+  parsed_offer: ParsedOffer;
+  trace: OfferParseTrace;
+}
+
 // ---------------------------------------------------------------------------
 // Prompt
 // ---------------------------------------------------------------------------
@@ -307,13 +318,37 @@ export async function parseOffer(
   rawText: string,
   brandName?: string | null
 ): Promise<ParsedOffer> {
+  const { parsed_offer } = await parseOfferWithTrace(rawText, brandName);
+  return parsed_offer;
+}
+
+export async function parseOfferWithTrace(
+  rawText: string,
+  brandName?: string | null
+): Promise<OfferParseResult> {
   try {
-    return await parseWithOllama(rawText, brandName);
+    const parsedOffer = await parseWithOllama(rawText, brandName);
+    return {
+      parsed_offer: parsedOffer,
+      trace: {
+        parser_used: "ollama",
+        status: "success",
+        error: null,
+      },
+    };
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.warn(
       "[parseOffer] Ollama unavailable or returned invalid data — using mock fallback.",
-      err instanceof Error ? err.message : err
+      message
     );
-    return parseMockOffer(rawText, brandName);
+    return {
+      parsed_offer: parseMockOffer(rawText, brandName),
+      trace: {
+        parser_used: "mock",
+        status: "fallback",
+        error: message,
+      },
+    };
   }
 }

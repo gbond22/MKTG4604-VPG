@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { EvaluateRequestSchema } from "@/lib/validation/schemas";
 import { getProfileById } from "@/lib/db/profile";
 import { prisma } from "@/lib/prisma";
-import { parseOffer } from "@/lib/ollama/parser";
+import { parseOfferWithTrace } from "@/lib/ollama/parser";
 import { runScoringEngine } from "@/lib/scoring/engine";
+import { logEvaluation } from "@/lib/trace/logger";
 
 /**
  * POST /api/evaluate
@@ -57,7 +58,11 @@ export async function POST(req: NextRequest) {
   }
 
   // ── 3. Parse offer → ParsedOffer ──────────────────────────────────────────
-  const parsedOffer = await parseOffer(offer.raw_offer_text, offer.brand_handle);
+  const parseResult = await parseOfferWithTrace(
+    offer.raw_offer_text,
+    offer.brand_handle
+  );
+  const parsedOffer = parseResult.parsed_offer;
 
   // ── 4. Run deterministic scoring engine ───────────────────────────────────
   const result = runScoringEngine({
@@ -97,6 +102,14 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+
+  await logEvaluation({
+    evaluation_id: savedEvaluation.id,
+    raw_offer_text: offer.raw_offer_text,
+    parsed_offer: parsedOffer,
+    parse_trace: parseResult.trace,
+    evaluation_result: result,
+  });
 
   return NextResponse.json(
     { evaluation_id: savedEvaluation.id, result },

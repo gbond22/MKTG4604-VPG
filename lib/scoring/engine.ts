@@ -13,7 +13,15 @@
  *   6. Negotiation points    → actionable list ordered by priority
  */
 
-import type { ParsedOffer, EvaluationResult, RiskFlag, NegotiationPoint, EvidenceNote, FairMarketRange } from "@/lib/validation/schemas";
+import type {
+  ParsedOffer,
+  EvaluationResult,
+  RiskFlag,
+  NegotiationPoint,
+  EvidenceNote,
+  FairMarketRange,
+  BrandSignalRecord,
+} from "@/lib/validation/schemas";
 import { requiredFieldsGate } from "./required-fields-gate";
 import { evaluateHardStops } from "./hard-stops";
 import { calcFairPay, calcBrandRisk, calcFit, calcTermsBurden } from "./subscores";
@@ -32,6 +40,8 @@ export interface ScoringInput {
   /** From the raw OfferInput — used for brand signal lookup */
   brandUrl?: string | null;
   brandHandle?: string | null;
+  /** Optional test hook to bypass fixture lookup with a synthetic brand signal. */
+  brandSignalOverride?: BrandSignalRecord | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -195,7 +205,8 @@ function buildFitSummary(
 // ---------------------------------------------------------------------------
 
 export function runScoringEngine(input: ScoringInput): EvaluationResult {
-  const { parsedOffer, profile, brandUrl, brandHandle } = input;
+  const { parsedOffer, profile, brandUrl, brandHandle, brandSignalOverride } =
+    input;
   const config = getScoringConfig();
   const allRiskFlags: RiskFlag[] = [];
   const evidenceNotes: EvidenceNote[] = [];
@@ -238,7 +249,10 @@ export function runScoringEngine(input: ScoringInput): EvaluationResult {
 
   // ── 2. Brand signal lookup ────────────────────────────────────────────
   const brandName = parsedOffer.brand_name ?? null;
-  const brandSignal = lookupBrandSignal(brandUrl, brandName ?? brandHandle);
+  const brandSignal =
+    brandSignalOverride !== undefined
+      ? brandSignalOverride
+      : lookupBrandSignal(brandUrl, brandName ?? brandHandle);
 
   // ── 3. Hard-stop rules ─────────────────────────────────────────────────
   const hardStop = evaluateHardStops(
