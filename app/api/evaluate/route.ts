@@ -2,15 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { EvaluateRequestSchema } from "@/lib/validation/schemas";
 import { getProfileById } from "@/lib/db/profile";
 import { prisma } from "@/lib/prisma";
-import type { EvaluationResult } from "@/lib/validation/schemas";
+import { parseOffer } from "@/lib/ollama/mock-parser";
+import { runScoringEngine } from "@/lib/scoring/engine";
 
 /**
  * POST /api/evaluate
- * Accepts { profile_id, offer }, validates both, persists the raw offer,
- * and returns a stub EvaluationResult.
  *
- * Steps 7–10 will replace the stub with:
- *   mocked parser → required-fields gate → deterministic scoring engine.
+ * Pipeline:
+ *   1. Validate request body
+ *   2. Load creator profile
+ *   3. Persist raw offer
+ *   4. Parse offer text → ParsedOffer (mock parser for now)
+ *   5. Run deterministic scoring engine → EvaluationResult
+ *   6. Persist evaluation
+ *   7. Return { evaluation_id, result }
  */
 export async function POST(req: NextRequest) {
   let body: unknown;
@@ -30,13 +35,13 @@ export async function POST(req: NextRequest) {
 
   const { profile_id, offer } = parsed.data;
 
-  // Verify the profile exists
+  // ── 1. Load creator profile ───────────────────────────────────────────────
   const profile = await getProfileById(profile_id);
   if (!profile) {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }
 
-  // Persist the raw offer
+  // ── 2. Persist raw offer ──────────────────────────────────────────────────
   let savedOffer;
   try {
     savedOffer = await prisma.brandOffer.create({
@@ -51,38 +56,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to save offer" }, { status: 500 });
   }
 
-  // --- Stub evaluation result ---
-  // Steps 7–10 replace this with the real scoring pipeline.
-  const stubResult: EvaluationResult = {
-    decision_status: "NEED_MORE_INFO",
-    composite_score: null,
-    fair_market_range: null,
-    subscore_breakdown: null,
-    risk_flags: [],
-    fit_summary: null,
-    negotiation_points: [],
-    evidence_notes: [],
-    confidence_level: "low",
-    missing_info_warnings: [
-      "Offer parsing not yet implemented — this is a stub result.",
-      "Complete steps 7–10 to enable full evaluation.",
-    ],
-  };
+  // ── 3. Parse offer → ParsedOffer ──────────────────────────────────────────
+  const parsedOffer = parseOffer(offer.raw_offer_text, offer.brand_handle);
 
-  // Persist the stub evaluation
+  // ── 4. Run deterministic scoring engine ───────────────────────────────────
+  const result = runScoringEngine({
+    parsedOffer,
+    profile,
+    brandUrl: offer.brand_url ?? null,
+    brandHandle: offer.brand_handle ?? null,
+  });
+
+  // ── 5. Persist evaluation ─────────────────────────────────────────────────
   let savedEvaluation;
   try {
     savedEvaluation = await prisma.evaluation.create({
       data: {
         offer_id: savedOffer.id,
         profile_id: profile.id,
-        decision_status: stubResult.decision_status,
-        composite_score: stubResult.composite_score,
-        confidence_level: stubResult.confidence_level,
-        risk_flags: JSON.stringify(stubResult.risk_flags),
-        negotiation_points: JSON.stringify(stubResult.negotiation_points),
-        evidence_notes: JSON.stringify(stubResult.evidence_notes),
-        missing_info_warnings: JSON.stringify(stubResult.missing_info_warnings),
+        decision_status: result.decision_status,
+        composite_score: result.composite_score,
+        confidence_level: result.confidence_level,
+        subscore_breakdown: result.subscore_breakdown
+          ? JSON.stringify(result.subscore_breakdown)
+          : null,
+        risk_flags: JSON.stringify(result.risk_flags),
+        negotiation_points: JSON.stringify(result.negotiation_points),
+        evidence_notes: JSON.stringify(result.evidence_notes),
+        fair_market_range: result.fair_market_range
+          ? JSON.stringify(result.fair_market_range)
+          : null,
+        fit_summary: result.fit_summary,
+        missing_info_warnings: JSON.stringify(result.missing_info_warnings),
       },
     });
   } catch (err) {
@@ -94,7 +99,7 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json(
-    { evaluation_id: savedEvaluation.id, result: stubResult },
+    { evaluation_id: savedEvaluation.id, result },
     { status: 200 }
   );
 }
