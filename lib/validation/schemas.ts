@@ -141,25 +141,25 @@ export const SubscoreBreakdownSchema = z.object({
 export type SubscoreBreakdown = z.infer<typeof SubscoreBreakdownSchema>;
 
 export const RiskFlagSchema = z.object({
+  flag: z.string(),
   severity: z.enum(["low", "medium", "high", "critical"]),
-  category: z.enum([
-    "scam_signal",
-    "payment_risk",
-    "usage_rights",
-    "exclusivity",
-    "brand_legitimacy",
-    "missing_info",
-    "other",
-  ]),
-  description: z.string(),
+  detail: z.string(),
 });
 export type RiskFlag = z.infer<typeof RiskFlagSchema>;
 
+export const NegotiationPrioritySchema = z.enum([
+  "must_have",
+  "nice_to_have",
+  "informational",
+  "high",
+  "medium",
+  "low",
+]);
+
 export const NegotiationPointSchema = z.object({
-  priority: z.enum(["must_have", "nice_to_have", "informational"]),
-  topic: z.string(),
-  suggested_ask: z.string(),
-  rationale: z.string().optional(),
+  point: z.string(),
+  priority: NegotiationPrioritySchema,
+  category: z.string(),
 });
 export type NegotiationPoint = z.infer<typeof NegotiationPointSchema>;
 
@@ -191,7 +191,7 @@ export const EvaluationResultSchema = z.object({
   /** Plain-English summary of brand/creator fit */
   fit_summary: z.string().nullable(),
   negotiation_points: z.array(NegotiationPointSchema),
-  evidence_notes: z.array(EvidenceNoteSchema),
+  evidence_notes: z.array(EvidenceNoteSchema).optional().default([]),
   confidence_level: ConfidenceLevelSchema,
   missing_info_warnings: z.array(z.string()),
 });

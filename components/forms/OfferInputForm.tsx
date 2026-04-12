@@ -9,7 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import type { EvaluationResult } from "@/lib/validation/schemas";
+import {
+  EvaluationResultSchema,
+  type EvaluationResult,
+} from "@/lib/validation/schemas";
 
 // ---------------------------------------------------------------------------
 // Form-level schema — mirrors OfferInputSchema with coercion for empty strings
@@ -73,10 +76,13 @@ export function OfferInputForm({ profileId, onEvaluated }: OfferInputFormProps) 
         return;
       }
 
-      onEvaluated(
-        data.result as EvaluationResult,
-        data.evaluation_id as string
-      );
+      const parsedResult = EvaluationResultSchema.safeParse(data.result);
+      if (!parsedResult.success || typeof data.evaluation_id !== "string") {
+        setServerError("The evaluation response was incomplete. Please try again.");
+        return;
+      }
+
+      onEvaluated(parsedResult.data, data.evaluation_id);
     } catch {
       setServerError("Network error — please try again.");
     } finally {
