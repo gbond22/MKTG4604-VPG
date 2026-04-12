@@ -21,28 +21,13 @@ const PRIORITY_META = {
     badgeClassName: "border-rose-200 bg-rose-50 text-rose-700",
     order: 0,
   },
-  high: {
-    label: "High",
-    badgeClassName: "border-rose-200 bg-rose-50 text-rose-700",
-    order: 0,
-  },
   nice_to_have: {
     label: "Nice to Have",
     badgeClassName: "border-amber-200 bg-amber-50 text-amber-700",
     order: 1,
   },
-  medium: {
-    label: "Medium",
-    badgeClassName: "border-amber-200 bg-amber-50 text-amber-700",
-    order: 1,
-  },
   informational: {
     label: "Informational",
-    badgeClassName: "border-slate-200 bg-slate-100 text-slate-700",
-    order: 2,
-  },
-  low: {
-    label: "Low",
     badgeClassName: "border-slate-200 bg-slate-100 text-slate-700",
     order: 2,
   },
@@ -92,8 +77,8 @@ export function NegotiationPoints({ result }: NegotiationPointsProps) {
 
               return (
                 <AccordionItem
-                  key={`${point.category}-${index}`}
-                  value={`${point.category}-${index}`}
+                  key={`${point.priority}-${index}`}
+                  value={`${point.priority}-${index}`}
                 >
                   <AccordionTrigger className="text-left">
                     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 pr-4">
@@ -103,19 +88,23 @@ export function NegotiationPoints({ result }: NegotiationPointsProps) {
                       >
                         {priority.label}
                       </Badge>
-                      <Badge variant="outline" className="shrink-0">
-                        {point.category}
-                      </Badge>
                       <span className="min-w-0 text-sm font-medium leading-6">
-                        {point.point}
+                        {point.topic}
                       </span>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="space-y-2 text-sm">
-                    <p className="text-muted-foreground">
-                      Use this ask when negotiating {point.category.toLowerCase()}.
-                    </p>
-                    <p className="leading-6">{point.point}</p>
+                  <AccordionContent className="space-y-3 pb-4 text-sm">
+                    <div className="rounded-md border border-border bg-muted/30 px-3 py-2">
+                      <p className="mb-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Suggested ask
+                      </p>
+                      <p className="leading-relaxed">{point.suggested_ask}</p>
+                    </div>
+                    {point.rationale && (
+                      <p className="text-xs text-muted-foreground">
+                        {point.rationale}
+                      </p>
+                    )}
                   </AccordionContent>
                 </AccordionItem>
               );

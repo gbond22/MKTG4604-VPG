@@ -64,7 +64,7 @@ export function RiskFlags({ result }: RiskFlagsProps) {
               const severity = SEVERITY_META[flag.severity];
 
               return (
-                <li key={`${flag.flag}-${index}`} className="rounded-xl border border-border p-4">
+                <li key={`${flag.category}-${index}`} className="rounded-xl border border-border p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge
                       variant="outline"
@@ -72,10 +72,12 @@ export function RiskFlags({ result }: RiskFlagsProps) {
                     >
                       {severity.label}
                     </Badge>
-                    <span className="text-sm font-medium">{flag.flag}</span>
+                    <span className="text-sm font-medium capitalize">
+                      {flag.category.replace(/_/g, " ")}
+                    </span>
                   </div>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    {flag.detail}
+                    {flag.description}
                   </p>
                 </li>
               );

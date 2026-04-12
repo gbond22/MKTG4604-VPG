@@ -141,25 +141,25 @@ export const SubscoreBreakdownSchema = z.object({
 export type SubscoreBreakdown = z.infer<typeof SubscoreBreakdownSchema>;
 
 export const RiskFlagSchema = z.object({
-  flag: z.string(),
   severity: z.enum(["low", "medium", "high", "critical"]),
-  detail: z.string(),
+  category: z.enum([
+    "scam_signal",
+    "payment_risk",
+    "usage_rights",
+    "exclusivity",
+    "brand_legitimacy",
+    "missing_info",
+    "other",
+  ]),
+  description: z.string(),
 });
 export type RiskFlag = z.infer<typeof RiskFlagSchema>;
 
-export const NegotiationPrioritySchema = z.enum([
-  "must_have",
-  "nice_to_have",
-  "informational",
-  "high",
-  "medium",
-  "low",
-]);
-
 export const NegotiationPointSchema = z.object({
-  point: z.string(),
-  priority: NegotiationPrioritySchema,
-  category: z.string(),
+  priority: z.enum(["must_have", "nice_to_have", "informational"]),
+  topic: z.string(),
+  suggested_ask: z.string(),
+  rationale: z.string().optional(),
 });
 export type NegotiationPoint = z.infer<typeof NegotiationPointSchema>;
 
@@ -290,7 +290,7 @@ export type BenchmarkRecord = z.infer<typeof BenchmarkRecordSchema>;
 
 export const BrandSignalRecordSchema = z.object({
   brand_name: z.string(),
-  brand_url: z.string().url(),
+  brand_url: z.url(),
   /** 1–5 overall review score from public sources */
   review_score: z.number().min(1).max(5).nullable(),
   complaint_notes: z.string().nullable(),

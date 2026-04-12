@@ -6,6 +6,37 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
+/**
+ * Minimal markdown → HTML converter for assistant responses.
+ * Only processes patterns produced by template-responder.ts.
+ * Safe: content is server-generated, never user-reflected.
+ */
+function markdownToHtml(text: string): string {
+  return (
+    text
+      // Tables (keep as preformatted so columns align)
+      .replace(
+        /((?:\|.+\|\n?){2,})/g,
+        (t) => `<pre class="my-1 overflow-x-auto rounded bg-muted/60 p-2 text-xs">${t.trimEnd()}</pre>`
+      )
+      // Bold **text**
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      // Italic _text_
+      .replace(/_(.*?)_/g, "<em>$1</em>")
+      // Unordered list items starting with "- "
+      .replace(
+        /^- (.+)$/gm,
+        '<li class="ml-4 list-disc leading-relaxed">$1</li>'
+      )
+      // Wrap runs of <li> elements in <ul>
+      .replace(/(<li[^>]*>[\s\S]*?<\/li>\n?)+/g, (m) => `<ul class="my-1">${m}</ul>`)
+      // Paragraph breaks
+      .replace(/\n\n/g, "<br /><br />")
+      // Single newlines
+      .replace(/\n/g, "<br />")
+  );
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -92,7 +123,15 @@ export function FollowUpChat({ evaluationId }: FollowUpChatProps) {
                       : "mr-auto max-w-[75%] rounded-lg bg-muted px-3 py-2 text-sm text-foreground"
                   }
                 >
-                  {msg.content}
+                  {msg.role === "assistant" ? (
+                    <span
+                      // Content is server-generated from fixed templates — safe.
+                      // eslint-disable-next-line react/no-danger
+                      dangerouslySetInnerHTML={{ __html: markdownToHtml(msg.content) }}
+                    />
+                  ) : (
+                    msg.content
+                  )}
                 </div>
               ))}
               {sending && (

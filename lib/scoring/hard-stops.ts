@@ -73,9 +73,9 @@ export function evaluateHardStops(
 
     if (reviewTooLow || scamComplaints) {
       riskFlags.push({
-        flag: "Scam signal",
         severity: "critical",
-        detail: reviewTooLow
+        category: "scam_signal",
+        description: reviewTooLow
           ? `Brand review score is ${brandSignal.review_score}/5 — below the 2.0 safety threshold.`
           : `Brand has known complaints involving non-payment or suspicious activity: "${brandSignal.complaint_notes}".`,
       });
@@ -90,9 +90,9 @@ export function evaluateHardStops(
       scope === "paid_ads" || scope === "whitelisting" || scope === "broad";
     if (broadScope && duration_months !== undefined && duration_months >= 12) {
       riskFlags.push({
-        flag: "Excessive usage rights",
         severity: "critical",
-        detail: `Offer requests ${scope.replace("_", " ")} usage rights for ${duration_months} months with no stated additional compensation — this is an excessive rights ask.`,
+        category: "usage_rights",
+        description: `Offer requests ${scope.replace("_", " ")} usage rights for ${duration_months} months with no stated additional compensation — this is an excessive rights ask.`,
       });
       return { triggered: true, action: "FORCE_DECLINE", riskFlags };
     }
@@ -107,9 +107,9 @@ export function evaluateHardStops(
   );
   if (unsupportedPlatform || unsupportedNiche) {
     riskFlags.push({
-      flag: "Unsupported segment",
       severity: "medium",
-      detail: `Creator's ${unsupportedPlatform ? "platform" : "niche"} is outside the supported range for this tool. Benchmarks may be inaccurate.`,
+      category: "other",
+      description: `Creator's ${unsupportedPlatform ? "platform" : "niche"} is outside the supported range for this tool. Benchmarks may be inaccurate.`,
     });
     return { triggered: false, action: "LOW_CONFIDENCE_WARNING", riskFlags };
   }

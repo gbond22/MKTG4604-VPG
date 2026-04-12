@@ -52,17 +52,19 @@ function buildNegotiationPoints(
   // ── Pay ────────────────────────────────────────────────────────────────
   if (fairPayScore < 40) {
     points.push({
-      category: "Compensation",
-      point:
-        "Request a rate increase to at least the benchmark minimum for your tier and deliverable type before signing.",
       priority: "must_have",
+      topic: "Compensation is significantly below market rate",
+      suggested_ask:
+        "Request a rate increase to at least the benchmark minimum for your tier and deliverable type before signing.",
+      rationale: `Fair-pay score: ${fairPayScore}/100 — offer is in the bottom tier for this niche.`,
     });
   } else if (fairPayScore < 60) {
     points.push({
-      category: "Compensation",
-      point:
-        "Counter with a rate closer to the benchmark average for your audience size.",
       priority: "nice_to_have",
+      topic: "Compensation is below market average",
+      suggested_ask:
+        "Counter with a rate closer to the benchmark average for your audience size.",
+      rationale: `Fair-pay score: ${fairPayScore}/100.`,
     });
   }
 
@@ -70,17 +72,17 @@ function buildNegotiationPoints(
   const scope = offer.usage_rights?.scope;
   if (scope === "paid_ads" || scope === "whitelisting") {
     points.push({
-      category: "Usage Rights",
-      point:
-        "Negotiate down to organic-only usage, or request an additional usage fee (typically 20–50 % of the base rate for paid amplification).",
       priority: "must_have",
+      topic: `Broad usage rights requested (${scope.replace("_", " ")})`,
+      suggested_ask:
+        "Negotiate down to organic-only usage, or request an additional usage fee (typically 20–50 % of the base rate for paid amplification).",
     });
   } else if (scope === "broad") {
     points.push({
-      category: "Usage Rights",
-      point:
-        "Request explicit scope limits (organic-only) and a time cap (3–6 months).",
       priority: "must_have",
+      topic: "Unrestricted usage rights requested",
+      suggested_ask:
+        "Request explicit scope limits (organic-only) and a time cap (3–6 months).",
     });
   }
 
@@ -92,9 +94,9 @@ function buildNegotiationPoints(
     scope !== "organic_only"
   ) {
     points.push({
-      category: "Usage Window",
-      point: "Negotiate the usage window to 3–6 months maximum.",
       priority: "nice_to_have",
+      topic: `Usage rights duration is ${durationMonths} months`,
+      suggested_ask: "Negotiate the usage window to 3–6 months maximum.",
     });
   }
 
@@ -102,11 +104,11 @@ function buildNegotiationPoints(
   if (offer.exclusivity?.is_exclusive) {
     const excDuration = offer.exclusivity.duration_months;
     points.push({
-      category: "Exclusivity",
-      point: excDuration
+      priority: "must_have",
+      topic: "Exclusivity requested",
+      suggested_ask: excDuration
         ? `Request an exclusivity fee (15–25 % of deal value) or limit the window to under ${Math.min(excDuration, 3)} months.`
         : "Confirm exclusivity scope and duration, then request compensation for any category lock-out.",
-      priority: "must_have",
     });
   }
 
@@ -114,17 +116,17 @@ function buildNegotiationPoints(
   const timing = offer.payment_timing;
   if (!timing || timing === "unknown") {
     points.push({
-      category: "Payment Terms",
-      point:
-        "Clarify payment terms in the contract — request net_30 or a 50 % upfront deposit.",
       priority: "must_have",
+      topic: "Payment timeline not specified",
+      suggested_ask:
+        "Clarify payment terms in the contract — request net_30 or a 50 % upfront deposit.",
     });
   } else if (timing === "net_60") {
     points.push({
-      category: "Payment Terms",
-      point:
-        "Counter-propose net_30 or request a 25–50 % deposit upon signing.",
       priority: "must_have",
+      topic: "Net-60 payment terms are unfavourable",
+      suggested_ask:
+        "Counter-propose net_30 or request a 25–50 % deposit upon signing.",
     });
   }
 
@@ -132,32 +134,26 @@ function buildNegotiationPoints(
   const revisions = offer.revisions;
   if (revisions !== undefined && revisions > 3) {
     points.push({
-      category: "Revision Scope",
-      point:
-        "Cap revisions at 2 rounds; additional revisions should be billed separately.",
       priority: "nice_to_have",
+      topic: `${revisions} revision rounds requested`,
+      suggested_ask:
+        "Cap revisions at 2 rounds; additional revisions should be billed separately.",
     });
   }
 
   // ── Brand risk ────────────────────────────────────────────────────────
   if (brandRiskScore < 45) {
     points.push({
-      category: "Brand Risk",
-      point:
-        "Request a written contract, 50 % upfront payment, and verify the brand's business registration before proceeding.",
       priority: "must_have",
+      topic: "Brand legitimacy concerns",
+      suggested_ask:
+        "Request a written contract, 50 % upfront payment, and verify the brand's business registration before proceeding.",
+      rationale: `Brand-risk score: ${brandRiskScore}/100.`,
     });
   }
 
   // Sort: must_have → nice_to_have → informational
-  const order = {
-    must_have: 0,
-    high: 0,
-    nice_to_have: 1,
-    medium: 1,
-    informational: 2,
-    low: 2,
-  } as const;
+  const order = { must_have: 0, nice_to_have: 1, informational: 2 } as const;
   return points.sort((a, b) => order[a.priority] - order[b.priority]);
 }
 
@@ -216,9 +212,9 @@ export function runScoringEngine(input: ScoringInput): EvaluationResult {
     );
     for (const m of gate.missing) {
       allRiskFlags.push({
-        flag: "Missing information",
         severity: "medium",
-        detail: `The offer does not specify ${m === "usage_rights" ? "usage rights" : m}.`,
+        category: "missing_info",
+        description: `The offer does not specify ${m === "usage_rights" ? "usage rights" : m}.`,
       });
     }
     return {
@@ -334,31 +330,31 @@ export function runScoringEngine(input: ScoringInput): EvaluationResult {
   // ── 8. Additional risk flags (non-blocking) ────────────────────────────
   if (!brandSignal) {
     allRiskFlags.push({
-      flag: "Brand verification incomplete",
       severity: "low",
-      detail: "Brand is not in the signal database — research independently.",
+      category: "brand_legitimacy",
+      description: "Brand is not in the signal database — research independently.",
     });
   } else if (brandSignal.legitimacy_flags.known_complaints) {
     allRiskFlags.push({
-      flag: "Creator complaints on record",
       severity: "high",
-      detail: `Brand has documented creator complaints: "${brandSignal.complaint_notes}".`,
+      category: "payment_risk",
+      description: `Brand has documented creator complaints: "${brandSignal.complaint_notes}".`,
     });
   }
 
   if (usageRights.scope === "paid_ads" || usageRights.scope === "whitelisting") {
     allRiskFlags.push({
-      flag: "Expanded usage rights",
       severity: "medium",
-      detail: `Offer includes ${usageRights.scope.replace("_", " ")} — verify that additional compensation reflects this.`,
+      category: "usage_rights",
+      description: `Offer includes ${usageRights.scope.replace("_", " ")} — verify that additional compensation reflects this.`,
     });
   }
 
   if (parsedOffer.exclusivity?.is_exclusive) {
     allRiskFlags.push({
-      flag: "Exclusivity requested",
       severity: "medium",
-      detail: `Exclusivity requested${parsedOffer.exclusivity.duration_months ? ` for ${parsedOffer.exclusivity.duration_months} months` : ""}${parsedOffer.exclusivity.category ? ` in the ${parsedOffer.exclusivity.category} category` : ""}.`,
+      category: "exclusivity",
+      description: `Exclusivity requested${parsedOffer.exclusivity.duration_months ? ` for ${parsedOffer.exclusivity.duration_months} months` : ""}${parsedOffer.exclusivity.category ? ` in the ${parsedOffer.exclusivity.category} category` : ""}.`,
     });
   }
 
