@@ -31,7 +31,11 @@ type OfferFormValues = z.infer<typeof OfferFormSchema>;
 
 interface OfferInputFormProps {
   profileId: string | null;
-  onEvaluated: (result: EvaluationResult, evaluationId: string) => void;
+  onEvaluated: (
+    result: EvaluationResult,
+    evaluationId: string,
+    parserUsed: "ollama" | "mock"
+  ) => void;
 }
 
 export function OfferInputForm({ profileId, onEvaluated }: OfferInputFormProps) {
@@ -82,7 +86,9 @@ export function OfferInputForm({ profileId, onEvaluated }: OfferInputFormProps) 
         return;
       }
 
-      onEvaluated(parsedResult.data, data.evaluation_id);
+      const parserUsed: "ollama" | "mock" =
+        data.parser_used === "mock" ? "mock" : "ollama";
+      onEvaluated(parsedResult.data, data.evaluation_id, parserUsed);
     } catch {
       setServerError("Network error — please try again.");
     } finally {

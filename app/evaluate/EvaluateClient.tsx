@@ -16,6 +16,7 @@ export function EvaluateClient() {
   const [evaluationId, setEvaluationId] = useState<string | null>(null);
   const [evaluationResult, setEvaluationResult] =
     useState<EvaluationResult | null>(null);
+  const [parserUsed, setParserUsed] = useState<"ollama" | "mock" | null>(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,9 +67,10 @@ export function EvaluateClient() {
           </div>
           <OfferInputForm
             profileId={profileId}
-            onEvaluated={(result, evalId) => {
+            onEvaluated={(result, evalId, pu) => {
               setEvaluationResult(result);
               setEvaluationId(evalId);
+              setParserUsed(pu);
             }}
           />
         </section>
@@ -85,6 +87,22 @@ export function EvaluateClient() {
               Step 3 — Evaluation
             </h2>
           </div>
+
+          {parserUsed === "mock" && (
+            <div
+              role="alert"
+              className="mb-6 flex gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+            >
+              <span className="mt-0.5 shrink-0 text-amber-500" aria-hidden>
+                ⚠
+              </span>
+              <span>
+                <strong>Ollama is not running</strong> — evaluation is based on
+                sample data, not your actual offer. Start Ollama and re-submit
+                for accurate results.
+              </span>
+            </div>
+          )}
 
           <ScoreCard result={evaluationResult} />
 

@@ -199,7 +199,7 @@ export function CreatorProfileForm({
               <Input
                 id="engagement_rate_pct"
                 type="number"
-                placeholder="e.g. 3.5"
+                placeholder="e.g. 2.5 (typical: 1.5–4.0%)"
                 step="0.1"
                 min={0}
                 max={100}

@@ -259,7 +259,8 @@ export function runScoringEngine(input: ScoringInput): EvaluationResult {
     parsedOffer,
     brandSignal,
     profile.platform,
-    profile.niche
+    profile.niche,
+    profile.followers
   );
   allRiskFlags.push(...hardStop.riskFlags);
 

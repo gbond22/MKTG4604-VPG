@@ -91,6 +91,21 @@ const isRiskFlags: Matcher = (q) =>
 const isMarketRate: Matcher = (q) =>
   /market.?rate|benchmark|industry.*standard|going rate|typical.*rate|average.*rate|rate.*typical|what.*rate/.test(q);
 
+const isNewOffer: Matcher = (q) => {
+  // Phrase-based signals
+  if (
+    /they (came back|sent|responded|offered|proposed|updated|revised)|new offer|counter.?offer|updated offer|revised offer|counter.?proposal|got a response|heard back/.test(
+      q
+    )
+  )
+    return true;
+  // Dollar amount + deliverable keyword together (looks like pasted offer terms)
+  return (
+    /\$?\s*[\d,]{3,}/.test(q) &&
+    /(reel|story|stories|video|post|tiktok|ugc|deliverable|deliverables)/.test(q)
+  );
+};
+
 // ---------------------------------------------------------------------------
 // Response builders
 // ---------------------------------------------------------------------------
@@ -432,6 +447,14 @@ function buildMarketRateResponse(ctx: StoredEvaluationContext): string {
   return response;
 }
 
+function buildNewOfferResponse(): string {
+  return (
+    "It looks like you've received a revised offer. To get an accurate score for " +
+    "the new terms, paste the updated offer in the evaluation form above and re-submit. " +
+    "The follow-up chat can only analyze the current scored evaluation."
+  );
+}
+
 function buildFallbackResponse(ctx: StoredEvaluationContext): string {
   const score = ctx.composite_score;
   const status = ctx.decision_status;
@@ -464,6 +487,7 @@ export function generateTemplateResponse(
 ): string {
   const q = question.toLowerCase();
 
+  if (isNewOffer(q)) return buildNewOfferResponse();
   if (isFairPay(q)) return buildFairPayResponse(ctx);
   if (isBrandRisk(q)) return buildBrandRiskResponse(ctx);
   if (isFit(q)) return buildFitResponse(ctx);

@@ -56,11 +56,15 @@ const SUPPORTED_NICHES = [
  *   2. EXCESSIVE_RIGHTS → FORCE_DECLINE
  *   3. UNSUPPORTED_SEGMENT → LOW_CONFIDENCE_WARNING (non-blocking)
  */
+const FOLLOWER_MIN = 10_000;
+const FOLLOWER_MAX = 150_000;
+
 export function evaluateHardStops(
   offer: ParsedOffer,
   brandSignal: BrandSignalRecord | null,
   creatorPlatform: string,
-  creatorNiche: string
+  creatorNiche: string,
+  followers: number
 ): HardStopResult {
   const riskFlags: RiskFlag[] = [];
 
@@ -110,6 +114,16 @@ export function evaluateHardStops(
       severity: "medium",
       category: "other",
       description: `Creator's ${unsupportedPlatform ? "platform" : "niche"} is outside the supported range for this tool. Benchmarks may be inaccurate.`,
+    });
+    return { triggered: false, action: "LOW_CONFIDENCE_WARNING", riskFlags };
+  }
+
+  // ── 4. FOLLOWER_RANGE ─────────────────────────────────────────────────────
+  if (followers < FOLLOWER_MIN || followers > FOLLOWER_MAX) {
+    riskFlags.push({
+      severity: "medium",
+      category: "other",
+      description: `Follower count is outside the supported benchmark range (10K–150K). Scores may be less accurate.`,
     });
     return { triggered: false, action: "LOW_CONFIDENCE_WARNING", riskFlags };
   }

@@ -112,7 +112,11 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(
-    { evaluation_id: savedEvaluation.id, result },
+    {
+      evaluation_id: savedEvaluation.id,
+      result,
+      parser_used: parseResult.trace.parser_used,
+    },
     { status: 200 }
   );
 }
