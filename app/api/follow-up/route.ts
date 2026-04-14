@@ -3,6 +3,7 @@ import { FollowUpRequestSchema } from "@/lib/validation/schemas";
 import { prisma } from "@/lib/prisma";
 import { generateTemplateResponse } from "@/lib/chat/template-responder";
 import type { StoredEvaluationContext } from "@/lib/chat/template-responder";
+import { chat } from "@/lib/ollama/client";
 import type {
   RiskFlag,
   NegotiationPoint,
@@ -90,7 +91,31 @@ export async function POST(req: NextRequest) {
   };
 
   // ── 3. Generate response ───────────────────────────────────────────────────
-  const systemResponse = generateTemplateResponse(user_question, ctx);
+  let systemResponse: string;
+
+  if (process.env.OLLAMA_ENABLED !== "false") {
+    try {
+      const systemPrompt = [
+        "You are a brand deal advisor helping a creator understand their evaluation results.",
+        "Answer the user's question based solely on the evaluation data below.",
+        "Be concise and direct. Do not hallucinate data not present in the evaluation.",
+        "",
+        "Evaluation data:",
+        JSON.stringify(ctx, null, 2),
+      ].join("\n");
+
+      const ollamaResponse = await chat([
+        { role: "system", content: systemPrompt },
+        { role: "user", content: user_question },
+      ]);
+
+      systemResponse = ollamaResponse.trim() || generateTemplateResponse(user_question, ctx);
+    } catch {
+      systemResponse = generateTemplateResponse(user_question, ctx);
+    }
+  } else {
+    systemResponse = generateTemplateResponse(user_question, ctx);
+  }
 
   // ── 4. Persist follow-up ───────────────────────────────────────────────────
   try {

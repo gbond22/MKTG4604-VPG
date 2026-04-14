@@ -6,6 +6,7 @@ import { ScoreCard } from "@/components/evaluation/ScoreCard";
 import { RiskFlags } from "@/components/evaluation/RiskFlags";
 import { FitSummary } from "@/components/evaluation/FitSummary";
 import { NegotiationPoints } from "@/components/evaluation/NegotiationPoints";
+import { ReasoningTrace } from "@/components/evaluation/ReasoningTrace";
 import { FollowUpChat } from "@/components/chat/FollowUpChat";
 import { ExportSummary } from "@/components/evaluation/ExportSummary";
 import { Button } from "@/components/ui/button";
@@ -80,6 +81,8 @@ export function ResultsClient({
       </div>
 
       <NegotiationPoints result={result} />
+
+      <ReasoningTrace result={result} />
 
       {/* Follow-up chat */}
       <div className="pt-4 border-t border-[#D4D0CA]">
