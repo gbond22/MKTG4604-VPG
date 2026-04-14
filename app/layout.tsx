@@ -13,9 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Brand Deal Evaluator",
-  description:
-    "Evaluate inbound brand deal offers with deterministic scoring and AI-assisted analysis.",
+  title: "Brandalyze",
+  description: "Better brand deals, backed by data.",
 };
 
 export default function RootLayout({

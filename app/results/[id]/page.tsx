@@ -5,7 +5,7 @@ import { ResultsClient } from "./ResultsClient";
 import { getEvaluationById } from "@/lib/db/evaluation";
 
 export const metadata: Metadata = {
-  title: "Evaluation Results — Brand Deal Evaluator",
+  title: "Evaluation Results — Brandalyze",
 };
 
 export default async function ResultsPage({
@@ -13,10 +13,10 @@ export default async function ResultsPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ profileId?: string }>;
+  searchParams: Promise<{ profileId?: string; parserUsed?: string }>;
 }) {
   const { id } = await params;
-  const { profileId } = await searchParams;
+  const { profileId, parserUsed } = await searchParams;
 
   const record = await getEvaluationById(id);
 
@@ -55,6 +55,7 @@ export default async function ResultsPage({
         profile={record.profile}
         brand={record.brand}
         evaluationDate={record.createdAt.toISOString()}
+        parserUsed={parserUsed === "ollama" || parserUsed === "mock" ? parserUsed : undefined}
       />
     </EvaluateShell>
   );

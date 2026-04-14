@@ -20,6 +20,7 @@ interface ResultsClientProps {
   profile: ProfileSummary;
   brand: BrandSummary;
   evaluationDate: string;
+  parserUsed?: "ollama" | "mock";
 }
 
 export function ResultsClient({
@@ -29,6 +30,7 @@ export function ResultsClient({
   profile,
   brand,
   evaluationDate,
+  parserUsed,
 }: ResultsClientProps) {
   const evaluateHref = `/evaluate?profileId=${profileId}`;
 
@@ -74,6 +76,11 @@ export function ResultsClient({
 
       {/* Results grid */}
       <ScoreCard result={result} />
+      {parserUsed && (
+        <p className="text-xs text-[#999999] -mt-6">
+          Powered by {parserUsed === "ollama" ? "Ollama" : "mock parser"}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <RiskFlags result={result} />

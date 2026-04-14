@@ -3,7 +3,7 @@ import { EvaluateShell } from "@/components/layout/EvaluateShell";
 import { ProfileClient } from "./ProfileClient";
 
 export const metadata: Metadata = {
-  title: "Your Profile — Brand Deal Evaluator",
+  title: "Your Profile — Brandalyze",
 };
 
 export default function ProfilePage() {

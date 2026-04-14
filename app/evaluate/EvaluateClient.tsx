@@ -16,9 +16,9 @@ export function EvaluateClient({ profileId }: EvaluateClientProps) {
   function handleEvaluated(
     _result: EvaluationResult,
     evaluationId: string,
-    _parserUsed: "ollama" | "mock"
+    parserUsed: "ollama" | "mock"
   ) {
-    router.push(`/results/${evaluationId}?profileId=${profileId}`);
+    router.push(`/results/${evaluationId}?profileId=${profileId}&parserUsed=${parserUsed}`);
   }
 
   return (

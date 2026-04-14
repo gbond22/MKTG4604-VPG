@@ -4,7 +4,7 @@ import { EvaluateShell } from "@/components/layout/EvaluateShell";
 import { EvaluateClient } from "./EvaluateClient";
 
 export const metadata: Metadata = {
-  title: "Paste Offer — Brand Deal Evaluator",
+  title: "Paste Offer — Brandalyze",
 };
 
 export default async function EvaluatePage({

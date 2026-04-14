@@ -111,7 +111,7 @@ export function ExportSummary({
         {/* Header */}
         <div style={{ borderBottom: "2px solid #1B6B6D", paddingBottom: "8px", marginBottom: "12px" }}>
           <div style={{ fontSize: "14pt", fontWeight: 700, color: "#1A1A2E" }}>
-            Brand Deal Evaluator — Evaluation Summary
+            Brandalyze — Evaluation Summary
           </div>
           <div style={{ fontSize: "9pt", color: "#555", marginTop: "2px" }}>
             Generated {dateLabel}
@@ -320,7 +320,7 @@ export function ExportSummary({
 
         {/* Footer */}
         <div style={{ borderTop: "1px solid #D4D0CA", paddingTop: "8px", marginTop: "8px", fontSize: "8pt", color: "#888", display: "flex", justifyContent: "space-between" }}>
-          <span>Brand Deal Evaluator — branddealevaluator.com</span>
+          <span>Brandalyze — brandalyze.com</span>
           <span>Generated {dateLabel}</span>
         </div>
       </div>

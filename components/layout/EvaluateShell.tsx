@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Sparkles } from "lucide-react";
+import { Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 // ── Logo with Sparkles fallback ───────────────────────────────────────────────
@@ -12,18 +12,18 @@ function NavLogo() {
 
   if (failed) {
     return (
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1B6B6D]/20 text-white shrink-0">
-        <Sparkles className="h-5 w-5" />
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B6B6D]/20 text-white shrink-0">
+        <Shield className="h-6 w-6" />
       </div>
     );
   }
 
   return (
     <Image
-      src="/logo.png"
-      alt="Brand Deal Evaluator logo"
-      width={40}
-      height={40}
+      src="/logo.svg"
+      alt="Brandalyze logo"
+      width={48}
+      height={48}
       className="rounded-xl object-contain shrink-0"
       onError={() => setFailed(true)}
     />
@@ -96,16 +96,16 @@ export function EvaluateShell({ children }: EvaluateShellProps) {
   return (
     <div className="min-h-screen bg-[#EDE7DF]">
       {/* Navbar */}
-      <header className="bg-[#1A1A2E] px-6 py-3 sticky top-0 z-10">
+      <header className="bg-[#1A1A2E] px-6 py-4 sticky top-0 z-10">
         <div className="mx-auto max-w-5xl flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <NavLogo />
             <div className="flex items-baseline gap-2.5">
-              <h1 className="text-base font-semibold tracking-tight text-white">
-                Brand Deal Evaluator
+              <h1 className="text-xl font-semibold tracking-tight text-white">
+                Brandalyze
               </h1>
-              <span className="hidden sm:block text-sm text-white/50">
-                Paste an offer. Get a score.
+              <span className="hidden sm:block text-base text-white/50">
+                Better brand deals, backed by data.
               </span>
             </div>
           </div>
@@ -117,7 +117,7 @@ export function EvaluateShell({ children }: EvaluateShellProps) {
 
       {/* Step progress bar */}
       <div className="border-b border-[#D4D0CA] bg-[#F5F0EB] px-6 py-4">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-xs">
           <StepBar />
         </div>
       </div>
