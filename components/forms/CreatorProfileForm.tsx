@@ -105,9 +105,9 @@ export function CreatorProfileForm({
   }
 
   return (
-    <Card>
+    <Card className="rounded-2xl shadow-sm border-[#D4D0CA] bg-[#F5F0EB]">
       <CardHeader className="pb-4">
-        <CardTitle className="text-base">Creator Profile</CardTitle>
+        <CardTitle className="text-base text-[#1A1A2E]">Creator Profile</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
@@ -122,7 +122,7 @@ export function CreatorProfileForm({
                   })
                 }
               >
-                <SelectTrigger id="platform">
+                <SelectTrigger id="platform" className="bg-white border-[#D4D0CA]">
                   <SelectValue placeholder="Select platform" />
                 </SelectTrigger>
                 <SelectContent>
@@ -154,7 +154,7 @@ export function CreatorProfileForm({
                   )
                 }
               >
-                <SelectTrigger id="niche">
+                <SelectTrigger id="niche" className="bg-white border-[#D4D0CA]">
                   <SelectValue placeholder="Select niche" />
                 </SelectTrigger>
                 <SelectContent>
@@ -178,9 +178,10 @@ export function CreatorProfileForm({
               <Input
                 id="followers"
                 type="number"
-                placeholder="e.g. 45000"
+                placeholder="e.g. 50,000 (50K) or 1,200,000 (1.2M)"
                 min={1000}
                 max={1000000}
+                className="bg-white border-[#D4D0CA] rounded-lg"
                 {...register("followers", { valueAsNumber: true })}
               />
               {errors.followers && (
@@ -203,6 +204,7 @@ export function CreatorProfileForm({
                 step="0.1"
                 min={0}
                 max={100}
+                className="bg-white border-[#D4D0CA] rounded-lg"
                 {...register("engagement_rate_pct", { valueAsNumber: true })}
               />
               {errors.engagement_rate_pct && (
@@ -218,8 +220,9 @@ export function CreatorProfileForm({
               <Input
                 id="avg_views"
                 type="number"
-                placeholder="e.g. 12000"
+                placeholder="e.g. 12,000 views per post"
                 min={0}
+                className="bg-white border-[#D4D0CA] rounded-lg"
                 {...register("avg_views", { valueAsNumber: true })}
               />
               {errors.avg_views && (
@@ -240,9 +243,9 @@ export function CreatorProfileForm({
               <Input
                 id="geography"
                 type="text"
-                placeholder="US"
+                placeholder="e.g. US, CA, GB, AU"
                 maxLength={2}
-                className="uppercase"
+                className="uppercase bg-white border-[#D4D0CA] rounded-lg"
                 {...register("geography")}
               />
               {errors.geography && (
@@ -263,7 +266,8 @@ export function CreatorProfileForm({
               <Input
                 id="handle"
                 type="text"
-                placeholder="yourhandle"
+                placeholder="e.g. yourhandle (no @ needed)"
+                className="bg-white border-[#D4D0CA] rounded-lg"
                 {...register("handle")}
               />
             </div>
@@ -279,7 +283,7 @@ export function CreatorProfileForm({
             </p>
           )}
 
-          <Button type="submit" className="w-full sm:w-auto" disabled={saving}>
+          <Button type="submit" className="w-full sm:w-auto hover:bg-[#155456]" disabled={saving}>
             {saving
               ? "Saving…"
               : savedProfileId

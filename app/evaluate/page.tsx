@@ -1,10 +1,26 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { EvaluateShell } from "@/components/layout/EvaluateShell";
 import { EvaluateClient } from "./EvaluateClient";
 
 export const metadata: Metadata = {
-  title: "Evaluate Offer — Brand Deal Evaluator",
+  title: "Paste Offer — Brand Deal Evaluator",
 };
 
-export default function EvaluatePage() {
-  return <EvaluateClient />;
+export default async function EvaluatePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ profileId?: string }>;
+}) {
+  const { profileId } = await searchParams;
+
+  if (!profileId) {
+    redirect("/profile");
+  }
+
+  return (
+    <EvaluateShell>
+      <EvaluateClient profileId={profileId} />
+    </EvaluateShell>
+  );
 }

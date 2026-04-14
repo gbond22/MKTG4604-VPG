@@ -99,13 +99,13 @@ export function OfferInputForm({ profileId, onEvaluated }: OfferInputFormProps) 
   const disabled = !profileId || submitting;
 
   return (
-    <Card>
+    <Card className="rounded-2xl shadow-sm border-[#D4D0CA] bg-[#F5F0EB]">
       <CardHeader className="pb-4">
-        <CardTitle className="text-base">Offer Text</CardTitle>
+        <CardTitle className="text-base text-[#1A1A2E]">Offer Text</CardTitle>
       </CardHeader>
       <CardContent>
         {!profileId && (
-          <p className="mb-4 rounded-md border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          <p className="mb-4 rounded-lg border border-[#D4D0CA] bg-[#EDE7DF]/50 px-4 py-3 text-sm text-[#999999]">
             Save your profile above before submitting an offer.
           </p>
         )}
@@ -121,8 +121,8 @@ export function OfferInputForm({ profileId, onEvaluated }: OfferInputFormProps) 
             </div>
             <Textarea
               id="raw_offer_text"
-              placeholder="Paste the full DM, email, or brief here…"
-              className="min-h-[160px] resize-y font-mono text-sm"
+              placeholder="Paste the full DM, email, or brief here — the more detail, the better the evaluation."
+              className="min-h-[160px] resize-y font-mono text-sm bg-white border-[#D4D0CA] rounded-lg"
               disabled={disabled}
               {...register("raw_offer_text")}
             />
@@ -151,6 +151,7 @@ export function OfferInputForm({ profileId, onEvaluated }: OfferInputFormProps) 
                 type="url"
                 placeholder="https://branddomain.com"
                 disabled={disabled}
+                className="bg-white border-[#D4D0CA] rounded-lg"
                 {...register("brand_url")}
               />
               {errors.brand_url && (
@@ -170,8 +171,9 @@ export function OfferInputForm({ profileId, onEvaluated }: OfferInputFormProps) 
               <Input
                 id="brand_handle"
                 type="text"
-                placeholder="@brandhandle"
+                placeholder="e.g. @brandhandle"
                 disabled={disabled}
+                className="bg-white border-[#D4D0CA] rounded-lg"
                 {...register("brand_handle")}
               />
             </div>
@@ -184,7 +186,7 @@ export function OfferInputForm({ profileId, onEvaluated }: OfferInputFormProps) 
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full hover:bg-[#155456]"
             disabled={disabled}
           >
             {submitting ? "Evaluating…" : "Evaluate Offer"}

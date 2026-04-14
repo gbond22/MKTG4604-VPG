@@ -50,23 +50,23 @@
 
 :root {
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --foreground: #2D2D3F;
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: #2D2D3F;
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: #1B6B6D;
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted-foreground: #999999;
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #D4D0CA;
+  --input: #ffffff;
+  --ring: #1B6B6D;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -75,12 +75,25 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #1B6B6D;
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-border: #D4D0CA;
+  --sidebar-ring: #1B6B6D;
+
+  /* ── Brand palette ────────────────────────────────────────────────────────── */
+  --color-primary: #1B6B6D;
+  --color-secondary: #C4613A;
+  --color-text-primary: #2D2D3F;
+  --color-text-heading: #1A1A2E;
+  --color-text-muted: #999999;
+  --color-bg-page: #EDE7DF;
+  --color-bg-card: #F5F0EB;
+  --color-bg-input: #FFFFFF;
+  --color-border: #D4D0CA;
+  --color-accent-blue: #4A6FA5;
+  --color-accent-gold: #D4A84B;
 }
 
 .dark {
@@ -126,5 +139,52 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* ── Print: show only .print-summary ────────────────────────────────────────── */
+@media screen {
+  /* Keep the summary out of the visual flow on screen */
+  .print-summary {
+    display: none;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+
+  /* Blank out everything */
+  body * {
+    visibility: hidden !important;
+    color: black !important;
+    background: transparent !important;
+  }
+
+  /* Restore only the summary */
+  .print-summary {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    color: black !important;
+    background: white !important;
+  }
+
+  .print-summary * {
+    visibility: visible !important;
+    color: black !important;
+    background: transparent !important;
+  }
+
+  /* Let sections break naturally across pages if content is long */
+  .print-summary .print-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 }

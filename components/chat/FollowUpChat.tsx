@@ -95,13 +95,13 @@ export function FollowUpChat({ evaluationId }: FollowUpChatProps) {
   const locked = !evaluationId;
 
   return (
-    <Card>
+    <Card className="rounded-2xl shadow-sm border-[#D4D0CA] bg-[#F5F0EB]">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Follow-up Chat</CardTitle>
+        <CardTitle className="text-base text-[#1A1A2E]">Follow-up Chat</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {locked && (
-          <p className="rounded-md border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          <p className="rounded-lg border border-[#D4D0CA] bg-[#EDE7DF]/50 px-4 py-3 text-sm text-[#999999]">
             Complete an evaluation above to unlock follow-up questions.
           </p>
         )}
@@ -110,7 +110,7 @@ export function FollowUpChat({ evaluationId }: FollowUpChatProps) {
         {messages.length > 0 && (
           <>
             <div
-              className="flex max-h-[360px] flex-col gap-3 overflow-y-auto rounded-md border border-border p-3"
+              className="flex max-h-[360px] flex-col gap-3 overflow-y-auto rounded-md border border-[#D4D0CA] p-3"
               aria-live="polite"
               aria-label="Chat thread"
             >
@@ -119,8 +119,8 @@ export function FollowUpChat({ evaluationId }: FollowUpChatProps) {
                   key={i}
                   className={
                     msg.role === "user"
-                      ? "ml-auto max-w-[75%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground"
-                      : "mr-auto max-w-[75%] rounded-lg bg-muted px-3 py-2 text-sm text-foreground"
+                      ? "ml-auto max-w-[75%] rounded-lg bg-[#1B6B6D] px-3 py-2 text-sm text-white"
+                      : "mr-auto max-w-[75%] rounded-lg border border-[#D4D0CA] bg-[#F5F0EB] px-3 py-2 text-sm text-[#2D2D3F]"
                   }
                 >
                   {msg.role === "assistant" ? (
@@ -135,7 +135,7 @@ export function FollowUpChat({ evaluationId }: FollowUpChatProps) {
                 </div>
               ))}
               {sending && (
-                <div className="mr-auto max-w-[75%] rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+                <div className="mr-auto max-w-[75%] rounded-lg border border-[#D4D0CA] bg-[#F5F0EB] px-3 py-2 text-sm text-[#999999]">
                   Thinking…
                 </div>
               )}
@@ -156,7 +156,7 @@ export function FollowUpChat({ evaluationId }: FollowUpChatProps) {
                 ? "Evaluate an offer first…"
                 : "Ask anything about this offer…"
             }
-            className="min-h-[60px] flex-1 resize-none text-sm"
+            className="min-h-[60px] flex-1 resize-none text-sm bg-white border-[#D4D0CA] rounded-lg text-[#2D2D3F]"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -168,7 +168,7 @@ export function FollowUpChat({ evaluationId }: FollowUpChatProps) {
             disabled={locked || sending}
           />
           <Button
-            className="self-end"
+            className="self-end hover:bg-[#155456]"
             onClick={sendMessage}
             disabled={locked || sending || !input.trim()}
           >

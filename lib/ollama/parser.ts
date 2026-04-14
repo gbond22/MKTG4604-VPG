@@ -326,6 +326,20 @@ export async function parseOfferWithTrace(
   rawText: string,
   brandName?: string | null
 ): Promise<OfferParseResult> {
+  if (process.env.OLLAMA_ENABLED === "false") {
+    console.log(
+      "[parseOffer] Ollama disabled via OLLAMA_ENABLED=false — using mock fallback."
+    );
+    return {
+      parsed_offer: parseMockOffer(rawText, brandName),
+      trace: {
+        parser_used: "mock",
+        status: "fallback",
+        error: null,
+      },
+    };
+  }
+
   try {
     const parsedOffer = await parseWithOllama(rawText, brandName);
     return {
