@@ -37,7 +37,7 @@ export default function AboutPage() {
         {/* Presentation slides */}
         <div>
           <h2 className="mb-4 text-lg font-semibold text-[#1A1A2E]">Presentation</h2>
-          <SlideViewer totalSlides={10} />
+          <SlideViewer totalSlides={8} />
         </div>
       </main>
     </EvaluateShell>
