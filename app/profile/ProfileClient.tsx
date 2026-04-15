@@ -1,17 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "lucide-react";
 import { CreatorProfileForm } from "@/components/forms/CreatorProfileForm";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 export function ProfileClient() {
-  const [profileId, setProfileId] = useState<string | null>(null);
   const router = useRouter();
+  const [profileId, setProfileId] = useState<string | null>(null);
+
+  function handleSaved(id: string) {
+    setProfileId(id);
+    router.push(`/evaluate?profileId=${id}`);
+  }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10 space-y-6">
+    <main className="mx-auto max-w-2xl px-6 py-10 space-y-6">
       {/* Section header */}
       <div className="flex items-center gap-2.5">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1B6B6D]/10 text-[#1B6B6D]">
@@ -27,18 +31,7 @@ export function ProfileClient() {
         </div>
       </div>
 
-      <CreatorProfileForm onSaved={setProfileId} savedProfileId={profileId} />
-
-      {profileId && (
-        <div className="flex justify-end pt-2">
-          <Button
-            className="hover:bg-[#155456]"
-            onClick={() => router.push(`/evaluate?profileId=${profileId}`)}
-          >
-            Continue to Evaluate →
-          </Button>
-        </div>
-      )}
+      <CreatorProfileForm onSaved={handleSaved} savedProfileId={profileId} />
     </main>
   );
 }

@@ -178,6 +178,12 @@ export const FairMarketRangeSchema = z.object({
   high: z.number().min(0),
   currency: z.string().length(3).default("USD"),
   basis: z.string().optional(),
+  /** Human-readable deliverable bundle description, e.g. "1× reel + 3× story" */
+  deliverable_label: z.string().optional(),
+  /** Single-unit benchmark low for the primary deliverable type */
+  per_unit_low: z.number().min(0).optional(),
+  /** Single-unit benchmark high for the primary deliverable type */
+  per_unit_high: z.number().min(0).optional(),
 });
 export type FairMarketRange = z.infer<typeof FairMarketRangeSchema>;
 

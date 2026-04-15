@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
  * Minimal markdown → HTML converter for assistant responses.
  * Only processes patterns produced by template-responder.ts.
  * Safe: content is server-generated, never user-reflected.
+ * Only called after streaming is complete — never on partial text.
  */
 function markdownToHtml(text: string): string {
   return (
@@ -37,9 +38,14 @@ function markdownToHtml(text: string): string {
   );
 }
 
+const TYPING_DELAY_MS = 2000;
+const WORD_INTERVAL_MS = 30;
+
 interface Message {
   role: "user" | "assistant";
   content: string;
+  typing?: true;    // bouncing dots phase
+  streaming?: true; // word-reveal phase — content is full text, rendered word by word
 }
 
 interface FollowUpChatProps {
@@ -50,42 +56,111 @@ export function FollowUpChat({ evaluationId }: FollowUpChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamedCount, setStreamedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom whenever messages update
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const streamIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Holds the word array for whichever message is currently streaming
+  const streamWordsRef = useRef<string[]>([]);
+
+  // Smooth scroll when a new message bubble appears
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Fast scroll to follow text growth during streaming
+  useEffect(() => {
+    if (isStreaming) {
+      bottomRef.current?.scrollIntoView({ behavior: "auto" });
+    }
+  }, [streamedCount, isStreaming]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (streamIntervalRef.current) clearInterval(streamIntervalRef.current);
+    };
+  }, []);
+
+  function startStreaming(fullText: string) {
+    const words = fullText.split(" ");
+    streamWordsRef.current = words;
+    setStreamedCount(0);
+    setIsStreaming(true);
+
+    streamIntervalRef.current = setInterval(() => {
+      setStreamedCount((prev) => {
+        const next = prev + 1;
+        if (next >= words.length) {
+          clearInterval(streamIntervalRef.current!);
+          streamIntervalRef.current = null;
+          // Remove streaming flag — triggers markdown render
+          setMessages((msgs) =>
+            msgs.map((m) => (m.streaming ? { ...m, streaming: undefined } : m))
+          );
+          setIsStreaming(false);
+        }
+        return next;
+      });
+    }, WORD_INTERVAL_MS);
+  }
+
   async function sendMessage() {
     const question = input.trim();
-    if (!question || !evaluationId || sending) return;
+    if (!question || !evaluationId || sending || isStreaming) return;
+
+    // Abort any in-progress stream before starting a new turn
+    if (streamIntervalRef.current) {
+      clearInterval(streamIntervalRef.current);
+      streamIntervalRef.current = null;
+    }
 
     setInput("");
     setError(null);
-    setMessages((prev) => [...prev, { role: "user", content: question }]);
     setSending(true);
 
+    setMessages((prev) => [
+      // Finalise any message still marked streaming (edge case: user clicks send fast)
+      ...prev.map((m) => (m.streaming ? { ...m, streaming: undefined } : m)),
+      { role: "user", content: question },
+      { role: "assistant", content: "", typing: true },
+    ]);
+
     try {
-      const res = await fetch("/api/follow-up", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ evaluation_id: evaluationId, user_question: question }),
-      });
+      // API call and visual delay run concurrently; we wait for both
+      const [res] = await Promise.all([
+        fetch("/api/follow-up", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ evaluation_id: evaluationId, user_question: question }),
+        }),
+        new Promise<void>((resolve) => setTimeout(resolve, TYPING_DELAY_MS)),
+      ]);
 
       const data = await res.json();
 
       if (!res.ok) {
+        setMessages((prev) => prev.filter((m) => !m.typing));
         setError(data?.error ?? "Failed to get a response.");
         return;
       }
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.system_response as string },
-      ]);
+      const fullText = data.system_response as string;
+
+      // Swap typing bubble → streaming bubble (full content stored, revealed word by word)
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.typing
+            ? { role: "assistant" as const, content: fullText, streaming: true }
+            : m
+        )
+      );
+
+      startStreaming(fullText);
     } catch {
+      setMessages((prev) => prev.filter((m) => !m.typing));
       setError("Network error — please try again.");
     } finally {
       setSending(false);
@@ -93,6 +168,7 @@ export function FollowUpChat({ evaluationId }: FollowUpChatProps) {
   }
 
   const locked = !evaluationId;
+  const inputDisabled = locked || sending || isStreaming;
 
   return (
     <Card className="rounded-2xl shadow-sm border-[#D4D0CA] bg-[#F5F0EB]">
@@ -123,7 +199,21 @@ export function FollowUpChat({ evaluationId }: FollowUpChatProps) {
                       : "mr-auto max-w-[75%] rounded-lg border border-[#D4D0CA] bg-[#F5F0EB] px-3 py-2 text-sm text-[#2D2D3F]"
                   }
                 >
-                  {msg.role === "assistant" ? (
+                  {msg.typing ? (
+                    /* ── Bouncing dots ── */
+                    <span className="flex items-center gap-1 py-0.5">
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#999999] [animation-delay:0ms]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#999999] [animation-delay:150ms]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#999999] [animation-delay:300ms]" />
+                    </span>
+                  ) : msg.streaming ? (
+                    /* ── Word-by-word reveal (raw text, no markdown yet) ── */
+                    <span>
+                      {streamWordsRef.current.slice(0, streamedCount + 1).join(" ")}
+                      <span className="animate-pulse text-[#1B6B6D]">▍</span>
+                    </span>
+                  ) : msg.role === "assistant" ? (
+                    /* ── Fully revealed — parse and render markdown ── */
                     <span
                       // Content is server-generated from fixed templates — safe.
                       // eslint-disable-next-line react/no-danger
@@ -134,11 +224,6 @@ export function FollowUpChat({ evaluationId }: FollowUpChatProps) {
                   )}
                 </div>
               ))}
-              {sending && (
-                <div className="mr-auto max-w-[75%] rounded-lg border border-[#D4D0CA] bg-[#F5F0EB] px-3 py-2 text-sm text-[#999999]">
-                  Thinking…
-                </div>
-              )}
               <div ref={bottomRef} />
             </div>
             <Separator />
@@ -165,12 +250,12 @@ export function FollowUpChat({ evaluationId }: FollowUpChatProps) {
                 sendMessage();
               }
             }}
-            disabled={locked || sending}
+            disabled={inputDisabled}
           />
           <Button
             className="self-end hover:bg-[#155456]"
             onClick={sendMessage}
-            disabled={locked || sending || !input.trim()}
+            disabled={inputDisabled || !input.trim()}
           >
             {sending ? "…" : "Send"}
           </Button>

@@ -154,11 +154,31 @@ export function ScoreCard({ result }: ScoreCardProps) {
 
             <div className="rounded-xl border border-[#D4D0CA] bg-[#EDE7DF]/50 px-4 py-3">
               <p className="text-sm text-[#999999]">Fair Market Range</p>
-              <p className="mt-1 text-lg font-semibold text-[#1A1A2E]">
-                {marketRange
-                  ? `${formatMoney(marketRange.low, marketRange.currency)} - ${formatMoney(marketRange.high, marketRange.currency)}`
-                  : "Unavailable"}
-              </p>
+              {marketRange ? (
+                <div className="mt-1 space-y-0.5">
+                  {marketRange.per_unit_low !== undefined &&
+                    marketRange.per_unit_high !== undefined && (
+                      <p className="text-xs text-[#999999]">
+                        Per deliverable:{" "}
+                        {formatMoney(marketRange.per_unit_low, marketRange.currency)}
+                        {" – "}
+                        {formatMoney(marketRange.per_unit_high, marketRange.currency)}
+                      </p>
+                    )}
+                  <p className="text-lg font-semibold text-[#1A1A2E]">
+                    {formatMoney(marketRange.low, marketRange.currency)}
+                    {" – "}
+                    {formatMoney(marketRange.high, marketRange.currency)}
+                  </p>
+                  {marketRange.deliverable_label && (
+                    <p className="text-xs text-[#999999]">
+                      Full package ({marketRange.deliverable_label})
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-1 text-lg font-semibold text-[#1A1A2E]">Unavailable</p>
+              )}
             </div>
           </>
         )}

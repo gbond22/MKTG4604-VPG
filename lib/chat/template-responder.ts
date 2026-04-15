@@ -119,14 +119,44 @@ function buildFairPayResponse(ctx: StoredEvaluationContext): string {
   const note = noteFor(ctx.evidence_notes, "benchmark");
   const range = ctx.fair_market_range;
 
+  // Extract the offered amount from the benchmark evidence note if present
+  const offeredAmount = (() => {
+    const m = note?.match(/Offer \(\$([0-9,]+)\)/);
+    return m ? parseInt(m[1].replace(/,/g, ""), 10) : null;
+  })();
+
+  const offeredInRange =
+    offeredAmount !== null &&
+    range !== null &&
+    offeredAmount >= range.low &&
+    offeredAmount <= range.high;
+
+  const pkgLabel = range?.deliverable_label ? ` for ${range.deliverable_label}` : "";
+  const pkgRange = range
+    ? `$${range.low.toLocaleString()}–$${range.high.toLocaleString()} ${range.currency}`
+    : null;
+
   let response = `**Fair Pay score: ${fmtScore(score)}**\n\n`;
 
   if (note) response += `${note}\n\n`;
 
-  if (range) {
-    response += `The benchmark for your tier and deliverable type is **$${range.low.toLocaleString()}–$${range.high.toLocaleString()} ${range.currency}**.`;
-    if (range.basis) response += ` (${range.basis})`;
+  if (range && pkgRange) {
+    response += `The full package benchmark${pkgLabel} is **${pkgRange}**.`;
+    if (range.per_unit_low !== undefined && range.per_unit_high !== undefined) {
+      response += ` (Per deliverable: $${range.per_unit_low.toLocaleString()}–$${range.per_unit_high.toLocaleString()})`;
+    }
     response += "\n\n";
+  }
+
+  // Special case: offered amount is within the per-deliverable benchmark range
+  // but the fair-pay score is still low — the offer is underpaying for the full bundle.
+  if (offeredInRange && score < 50) {
+    response +=
+      `While **$${offeredAmount!.toLocaleString()}** may seem to fall within the per-deliverable range, ` +
+      `the full package benchmark${pkgLabel} is **${pkgRange}**. ` +
+      `Your fair-pay score of **${score}/100** reflects that the total compensation is below what this ` +
+      `bundle typically commands — the rate looks reasonable for a single deliverable, but not for the complete scope.`;
+    return response;
   }
 
   if (score < 40) {
@@ -256,20 +286,22 @@ function buildWhatIfResponse(
     return `If the offer were raised to $${newAmount.toLocaleString()}, I can't compare it to a benchmark because no market data was found for your specific tier and deliverable mix. Evaluate it on an absolute basis and against competing offers.`;
   }
 
+  const pkgLabel = range.deliverable_label ? ` for ${range.deliverable_label}` : "";
+  const pkgRangeStr = `$${range.low.toLocaleString()}–$${range.high.toLocaleString()}`;
   const mid = (range.low + range.high) / 2;
+
   let position: string;
   if (newAmount < range.low) {
-    position = `still below the benchmark minimum of $${range.low.toLocaleString()} — the offer would remain underpaid`;
+    position = `still below the full package benchmark of ${pkgRangeStr}${pkgLabel} — the offer would remain underpaid for the bundle`;
   } else if (newAmount <= range.high) {
     const pct = Math.round(((newAmount - range.low) / (range.high - range.low)) * 100);
-    position = `within the benchmark range of $${range.low.toLocaleString()}–$${range.high.toLocaleString()} (${pct}% of the way through the range)`;
+    position = `within the full package benchmark of ${pkgRangeStr}${pkgLabel} (${pct}% of the way through the range)`;
   } else {
-    position = `above the benchmark ceiling of $${range.high.toLocaleString()} — a well-compensated deal`;
+    position = `above the package benchmark ceiling of $${range.high.toLocaleString()}${pkgLabel} — a well-compensated deal for the full bundle`;
   }
 
   const currentScore = ctx.subscore_breakdown?.fair_pay ?? null;
   const currentAmount = (() => {
-    // Back out the current offered amount from the evidence note if possible
     const note = noteFor(ctx.evidence_notes, "benchmark");
     const m = note?.match(/Offer \(\$([0-9,]+)\)/);
     return m ? parseInt(m[1].replace(/,/g, ""), 10) : null;
@@ -278,22 +310,55 @@ function buildWhatIfResponse(
   let response = `If the offer were raised to **$${newAmount.toLocaleString()}**, it would be ${position}.`;
 
   if (currentAmount !== null && currentScore !== null) {
-    const direction = newAmount > currentAmount ? "improvement" : "reduction";
-    response += `\n\nFor context, the current offer of $${currentAmount.toLocaleString()} yields a fair-pay score of ${currentScore}/100. At $${newAmount.toLocaleString()}, relative to the $${Math.round(mid).toLocaleString()} benchmark average, the score would ${newAmount > currentAmount ? "increase" : "decrease"} — an ${direction} in your position.`;
+    const increase = newAmount - currentAmount;
+    const pctChange = Math.round((increase / currentAmount) * 100);
+    const direction = increase > 0 ? "increase" : "reduction";
+    response += `\n\nFor context, the current offer of $${currentAmount.toLocaleString()} yields a fair-pay score of ${currentScore}/100. At $${newAmount.toLocaleString()}, that represents a **${Math.abs(pctChange)}% ${direction}** from the original offer, relative to the $${Math.round(mid).toLocaleString()} package benchmark average.`;
   }
-
-  response += `\n\nThe benchmark range basis: ${range.basis ?? "market data for your tier and deliverable type"}.`;
 
   return response;
 }
 
+// Universal fallback negotiation points added when composite < 65 and point count is low
+const UNIVERSAL_NEGOTIATE_POINTS: NegotiationPoint[] = [
+  {
+    topic: "Payment timeline",
+    suggested_ask: "Request a detailed payment schedule in writing — milestone-based or net-30 maximum.",
+    priority: "nice_to_have",
+    rationale: "Vague payment terms are one of the most common sources of creator disputes.",
+  },
+  {
+    topic: "Written contract",
+    suggested_ask:
+      "Ask for a written contract that specifies deliverable scope, revision limits (2–3 max), and approval timelines.",
+    priority: "nice_to_have",
+    rationale: "Protects both parties and prevents scope creep after content is delivered.",
+  },
+];
+
 function buildNegotiationResponse(ctx: StoredEvaluationContext): string {
-  if (ctx.negotiation_points.length === 0) {
+  const inNegotiateTerritory =
+    ctx.composite_score !== null && ctx.composite_score < 65;
+
+  let points = [...ctx.negotiation_points];
+
+  // Pad with universal advice when in NEGOTIATE territory and points are sparse
+  if (inNegotiateTerritory && points.length < 2) {
+    const existingTopics = new Set(points.map((p) => p.topic.toLowerCase()));
+    for (const universal of UNIVERSAL_NEGOTIATE_POINTS) {
+      if (!existingTopics.has(universal.topic.toLowerCase())) {
+        points.push(universal);
+        if (points.length >= 3) break;
+      }
+    }
+  }
+
+  if (points.length === 0) {
     return "No specific negotiation points were flagged for this evaluation — the offer terms appear reasonably creator-friendly across the board.";
   }
 
-  const mustHaves = ctx.negotiation_points.filter((p) => p.priority === "must_have");
-  const niceToHaves = ctx.negotiation_points.filter((p) => p.priority === "nice_to_have");
+  const mustHaves = points.filter((p) => p.priority === "must_have");
+  const niceToHaves = points.filter((p) => p.priority === "nice_to_have");
 
   let response = "Here are the prioritised negotiation points for this offer:\n\n";
 
@@ -310,6 +375,7 @@ function buildNegotiationResponse(ctx: StoredEvaluationContext): string {
     response += "**Nice-to-haves (push for if possible):**\n";
     for (const p of niceToHaves) {
       response += `- **${p.topic}**\n  → ${p.suggested_ask}\n`;
+      if (p.rationale) response += `  _(${p.rationale})_\n`;
     }
     response += "\n";
   }
@@ -435,14 +501,19 @@ function buildMarketRateResponse(ctx: StoredEvaluationContext): string {
     );
   }
 
-  let response = `**Fair market range for your tier and deliverable type:**\n`;
+  const pkgLabel = range.deliverable_label ? ` (${range.deliverable_label})` : "";
+  let response = `**Full package benchmark${pkgLabel}:**\n`;
   response += `$${range.low.toLocaleString()} – $${range.high.toLocaleString()} ${range.currency}\n\n`;
+
+  if (range.per_unit_low !== undefined && range.per_unit_high !== undefined) {
+    response += `Per deliverable: $${range.per_unit_low.toLocaleString()} – $${range.per_unit_high.toLocaleString()} ${range.currency}\n\n`;
+  }
 
   if (range.basis) response += `Basis: ${range.basis}\n\n`;
   if (note) response += `${note}\n\n`;
 
   const mid = Math.round((range.low + range.high) / 2);
-  response += `The benchmark midpoint is **$${mid.toLocaleString()}**. Offers at or above this figure are considered fairly compensated for your tier.`;
+  response += `The package benchmark midpoint is **$${mid.toLocaleString()}**. Compare your total offered amount against this figure, not against a single-deliverable rate.`;
 
   return response;
 }

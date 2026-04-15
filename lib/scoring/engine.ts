@@ -25,7 +25,7 @@ import type {
 import { requiredFieldsGate } from "./required-fields-gate";
 import { evaluateHardStops } from "./hard-stops";
 import { calcFairPay, calcBrandRisk, calcFit, calcTermsBurden } from "./subscores";
-import { sumExpectedCompensation } from "@/lib/data/benchmarks";
+import { sumExpectedCompensation, lookupBenchmark } from "@/lib/data/benchmarks";
 import { lookupBrandSignal } from "@/lib/data/brand-signals";
 import { getScoringConfig } from "@/lib/data/scoring-config";
 import type { CreatorProfile } from "@/app/generated/prisma/client";
@@ -170,7 +170,8 @@ function buildNegotiationPoints(
 function buildFitSummary(
   profile: CreatorProfile,
   offer: ParsedOffer,
-  fairMarket: { low: number; high: number } | null
+  fairMarket: { low: number; high: number } | null,
+  deliverableLabel: string | null
 ): string {
   const niche = profile.niche;
   const platform = profile.platform;
@@ -187,12 +188,14 @@ function buildFitSummary(
       summary += " The compensation is gifted product only — no cash is offered.";
     } else if (fairMarket) {
       const offered = comp.amount;
+      const pkgLabel = deliverableLabel ? ` for ${deliverableLabel}` : "";
+      const rangeStr = `$${fairMarket.low.toLocaleString()}–$${fairMarket.high.toLocaleString()}`;
       if (offered < fairMarket.low) {
-        summary += ` The offered $${offered.toLocaleString()} is below the typical range of $${fairMarket.low.toLocaleString()}–$${fairMarket.high.toLocaleString()} for your tier.`;
+        summary += ` The offered $${offered.toLocaleString()} is below the typical package range of ${rangeStr}${pkgLabel} at your tier.`;
       } else if (offered > fairMarket.high) {
-        summary += ` The offered $${offered.toLocaleString()} exceeds the typical range of $${fairMarket.low.toLocaleString()}–$${fairMarket.high.toLocaleString()} for your tier — this is a well-compensated deal.`;
+        summary += ` The offered $${offered.toLocaleString()} exceeds the typical package range of ${rangeStr}${pkgLabel} at your tier — this is a well-compensated deal.`;
       } else {
-        summary += ` The offered $${offered.toLocaleString()} falls within the typical range of $${fairMarket.low.toLocaleString()}–$${fairMarket.high.toLocaleString()} for your tier.`;
+        summary += ` The offered $${offered.toLocaleString()} falls within the typical package range of ${rangeStr}${pkgLabel} at your tier.`;
       }
     }
   }
@@ -386,13 +389,24 @@ export function runScoringEngine(input: ScoringInput): EvaluationResult {
   }
 
   // ── 10. Fair market range ─────────────────────────────────────────────
+  const deliverableLabel = deliverables
+    .map((d) => `${d.quantity > 1 ? `${d.quantity}× ` : ""}${d.type}`)
+    .join(" + ");
+
+  const primaryBenchmark = deliverables[0]
+    ? lookupBenchmark(profile.platform, profile.niche, profile.followers, deliverables[0].type)
+    : null;
+
   let fairMarketRange: FairMarketRange | null = null;
   if (fairPayResult.fairMarketLow !== null && fairPayResult.fairMarketHigh !== null) {
     fairMarketRange = {
       low: fairPayResult.fairMarketLow,
       high: fairPayResult.fairMarketHigh,
       currency: compensation.currency,
-      basis: "benchmark data for your tier, niche, and deliverable type",
+      basis: `benchmark data for ${deliverableLabel} at your tier and niche`,
+      deliverable_label: deliverableLabel,
+      per_unit_low: primaryBenchmark?.min_rate,
+      per_unit_high: primaryBenchmark?.max_rate,
     };
   }
 
@@ -404,7 +418,7 @@ export function runScoringEngine(input: ScoringInput): EvaluationResult {
   );
 
   // ── 12. Fit summary ────────────────────────────────────────────────────
-  const fitSummary = buildFitSummary(profile, parsedOffer, fairMarketRange);
+  const fitSummary = buildFitSummary(profile, parsedOffer, fairMarketRange, deliverableLabel);
 
   if (confidenceLevel === "low") {
     missingInfoWarnings.push(
